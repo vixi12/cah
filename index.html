@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Cartas Contra Amigos</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Syne+Mono&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0d0a1a; --surface: #15112a; --surface2: #1e1838;
+  --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.15);
+  --purple: #8b7cf8; --purple-dim: rgba(139,124,248,0.15); --purple-border: rgba(139,124,248,0.35);
+  --green: #4ade80; --red: #f87171; --amber: #fbbf24;
+  --text: #f0ecff; --muted: rgba(240,236,255,0.45); --hint: rgba(240,236,255,0.2);
+  --font: 'Syne', sans-serif; --mono: 'Syne Mono', monospace;
+}
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); overflow: hidden; }
+#app { height: 100vh; width: 100vw; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+.glow { position: fixed; pointer-events: none; z-index: 0; border-radius: 50%; filter: blur(80px); opacity: 0.1; }
+.g1 { width: 400px; height: 400px; background: var(--purple); top: -100px; left: -100px; }
+.g2 { width: 300px; height: 300px; background: #3b82f6; bottom: -80px; right: -80px; }
+.screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 40px 20px 24px; z-index: 1; overflow-y: auto; }
+.screen.center { justify-content: center; }
+.screen.hidden { display: none; }
+.logo { font-size: 38px; font-weight: 800; letter-spacing: -1px; background: linear-gradient(135deg, #f0ecff 0%, var(--purple) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 4px; text-align: center; }
+.tagline { font-size: 11px; color: var(--muted); letter-spacing: 0.14em; margin-bottom: 28px; text-align: center; }
+.card { background: var(--surface); border: 0.5px solid var(--border2); border-radius: 20px; padding: 22px; width: 100%; max-width: 420px; }
+.btn { width: 100%; padding: 13px; border-radius: 14px; border: none; font-family: var(--font); font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.btn-p { background: var(--purple); color: #fff; }
+.btn-p:hover { background: #9d8ffa; }
+.btn-s { background: var(--surface2); color: var(--text); border: 0.5px solid var(--border2); }
+.btn-s:hover { border-color: var(--purple-border); }
+.btn-g { background: var(--green); color: #081a0c; font-weight: 700; }
+.btn-r { background: var(--red); color: #1a0808; font-weight: 700; }
+.btn-ghost { background: transparent; color: var(--muted); border: 0.5px solid var(--border); padding: 9px 18px; width: auto; font-size: 12px; border-radius: 10px; }
+.btn-ghost:hover { color: var(--text); border-color: var(--border2); }
+input[type="text"] { width: 100%; padding: 12px 16px; background: var(--surface2); border: 0.5px solid var(--border2); border-radius: 12px; color: var(--text); font-family: var(--mono); font-size: 22px; letter-spacing: 0.15em; text-align: center; text-transform: uppercase; outline: none; transition: border-color 0.2s; margin-bottom: 12px; }
+input[type="text"]::placeholder { color: var(--hint); font-size: 14px; letter-spacing: 0.05em; }
+input[type="text"]:focus { border-color: var(--purple); }
+.name-in { font-family: var(--font) !important; font-size: 16px !important; letter-spacing: 0.02em !important; text-align: left !important; text-transform: none !important; }
+.lbl { font-size: 10px; color: var(--hint); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px; display: block; }
+.divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; color: var(--hint); font-size: 12px; }
+.divider::before, .divider::after { content: ''; flex: 1; height: 0.5px; background: var(--border); }
+.code-box { text-align: center; padding: 16px; background: var(--purple-dim); border: 1px solid var(--purple-border); border-radius: 16px; margin-bottom: 18px; }
+.code-val { font-family: var(--mono); font-size: 36px; color: var(--text); letter-spacing: 0.15em; }
+.code-hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.sec { font-size: 10px; color: var(--hint); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
+.plist { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
+.prow { display: flex; align-items: center; gap: 10px; background: var(--surface2); border-radius: 12px; padding: 9px 14px; border: 0.5px solid var(--border); }
+.prow.me { border-color: var(--purple-border); }
+.av { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+.pname { flex: 1; font-size: 14px; }
+.pscore { font-size: 12px; font-weight: 700; color: var(--purple); }
+.badge { font-size: 10px; padding: 3px 8px; border-radius: 6px; font-weight: 600; background: var(--purple-dim); color: var(--purple); border: 0.5px solid var(--purple-border); }
+.badge.czar { background: rgba(251,191,36,0.15); color: var(--amber); border-color: rgba(251,191,36,0.4); }
+.badge.done { background: rgba(74,222,128,0.15); color: var(--green); border-color: rgba(74,222,128,0.4); }
+
+/* SETTINGS */
+.settings-block { background: var(--surface2); border-radius: 14px; padding: 14px; border: 0.5px solid var(--border); margin-bottom: 12px; transition: opacity 0.2s; }
+.settings-block.readonly { opacity: 0.7; pointer-events: none; position: relative; }
+.settings-block.readonly::after { content: ''; position: absolute; inset: 0; background: transparent; cursor: not-allowed; border-radius: 14px; }
+.sel-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.sel-btn { background: var(--bg); border: 0.5px solid var(--border2); border-radius: 10px; padding: 10px 4px; text-align: center; cursor: pointer; transition: all 0.15s; font-family: var(--font); font-size: 14px; font-weight: 600; color: var(--text); }
+.sel-btn:hover { border-color: var(--purple-border); }
+.sel-btn.on { background: var(--purple-dim); border-color: var(--purple); color: var(--purple); }
+
+/* BLACK / WHITE CARDS */
+.bcard { background: #0a0710; border: 1px solid #2a2440; border-radius: 18px; padding: 22px 18px; color: var(--text); position: relative; box-shadow: 0 6px 24px rgba(0,0,0,0.4); }
+.bcard .blabel { font-size: 9px; color: var(--muted); letter-spacing: 0.16em; margin-bottom: 10px; text-transform: uppercase; }
+.bcard .btext { font-size: 19px; font-weight: 600; line-height: 1.35; }
+.bcard .bpick { position: absolute; bottom: 14px; right: 16px; font-size: 10px; color: var(--muted); letter-spacing: 0.1em; display: flex; align-items: center; gap: 6px; }
+.bcard .bpick .pdot { background: var(--text); color: #0a0710; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; }
+.wcard-sm { background: var(--surface); border: 1px solid var(--border2); border-radius: 14px; padding: 14px 12px; color: var(--text); cursor: pointer; transition: all 0.15s; min-height: 92px; display: flex; flex-direction: column; justify-content: space-between; }
+.wcard-sm:hover { border-color: var(--purple-border); transform: translateY(-2px); }
+.wcard-sm.sel { border-color: var(--purple); background: var(--purple-dim); }
+.wcard-sm .wtext { font-size: 13px; font-weight: 500; line-height: 1.3; }
+.wcard-sm .worder { font-size: 10px; color: var(--purple); font-family: var(--mono); margin-top: 8px; align-self: flex-end; font-weight: 700; }
+.wcard-disp { background: var(--surface); border: 1px solid var(--border2); border-radius: 14px; padding: 14px 12px; font-size: 13px; line-height: 1.3; font-weight: 500; }
+.wcard-disp.win { border-color: var(--green); background: rgba(74,222,128,0.08); }
+.hand-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; margin-bottom: 10px; }
+.subs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; margin: 14px 0; }
+.sub-box { background: var(--surface); border: 1px solid var(--border2); border-radius: 14px; padding: 12px 10px; cursor: pointer; transition: all 0.15s; }
+.sub-box:hover { border-color: var(--purple-border); transform: translateY(-2px); }
+.sub-box.win { border-color: var(--green); background: rgba(74,222,128,0.08); }
+.sub-box .schunk { font-size: 12px; line-height: 1.3; padding: 6px 0; }
+.sub-box .schunk + .schunk { border-top: 0.5px solid var(--border); }
+
+/* GAME UI */
+.gtop { width: 100%; max-width: 420px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-size: 11px; color: var(--muted); letter-spacing: 0.06em; }
+.gtop .gczar { color: var(--amber); font-weight: 700; }
+.bwrap { width: 100%; max-width: 420px; margin-bottom: 18px; }
+.gwrap { width: 100%; max-width: 420px; }
+.ctitle { font-size: 17px; font-weight: 700; text-align: center; margin-bottom: 4px; }
+.csub { font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 14px; }
+.confirm-row { display: flex; gap: 8px; margin-top: 10px; }
+.confirm-row .btn { flex: 1; }
+.waitline { background: var(--surface2); border: 0.5px solid var(--border); border-radius: 12px; padding: 10px 14px; margin-bottom: 8px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
+.waitline .wname { font-weight: 600; }
+
+/* RESULTS */
+.rtit { font-size: 24px; font-weight: 800; text-align: center; margin-bottom: 4px; }
+.rsub { font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 18px; }
+.srow { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 14px; margin-bottom: 7px; background: var(--surface2); border: 0.5px solid var(--border); }
+.srow.top { background: var(--purple-dim); border-color: var(--purple-border); }
+.srank { font-size: 18px; width: 26px; text-align: center; }
+.sname { flex: 1; font-size: 14px; font-weight: 600; }
+.spts { font-size: 18px; font-weight: 800; color: var(--purple); }
+.rbox { background: var(--surface2); border-radius: 14px; padding: 14px; border: 0.5px solid var(--border); margin-bottom: 12px; }
+.rhint { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+.rchips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.chip { display: flex; align-items: center; gap: 6px; background: var(--surface2); border-radius: 20px; padding: 6px 12px; font-size: 12px; border: 0.5px solid var(--border); }
+.chip.yes { border-color: var(--green); color: var(--green); }
+
+/* MODAL */
+.mwrap { position: fixed; inset: 0; z-index: 200; background: rgba(13,10,26,0.95); display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+.mwrap.hidden { display: none; }
+.modal { background: var(--surface); border: 0.5px solid var(--border2); border-radius: 20px; padding: 22px; width: 100%; max-width: 380px; max-height: 90vh; overflow-y: auto; }
+.mtit { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+.msub { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+.msteps { font-size: 12px; color: var(--muted); line-height: 2; margin-bottom: 14px; }
+.msteps a { color: var(--purple); }
+.mfield { margin-bottom: 12px; }
+.mfield label { font-size: 10px; color: var(--hint); letter-spacing: 0.08em; display: block; margin-bottom: 5px; text-transform: uppercase; }
+.mfield input { font-family: var(--mono) !important; font-size: 13px !important; letter-spacing: 0.04em !important; text-align: left !important; text-transform: none !important; }
+.merr { font-size: 12px; color: var(--red); min-height: 16px; margin: 6px 0; }
+.toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: var(--surface); border: 0.5px solid var(--border2); border-radius: 12px; padding: 11px 20px; font-size: 13px; z-index: 100; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; }
+.toast.hidden { opacity: 0; }
+.vtag { position: fixed; top: 8px; left: 10px; font-size: 12px; color: var(--muted); font-family: var(--mono); letter-spacing: 0.12em; z-index: 150; pointer-events: none; font-weight: 600; }
+.rtag { position: fixed; top: 6px; right: 8px; font-size: 10px; color: var(--purple); font-family: var(--mono); letter-spacing: 0.12em; z-index: 150; pointer-events: none; background: var(--purple-dim); border: 0.5px solid var(--purple-border); border-radius: 8px; padding: 3px 9px; font-weight: 600; }
+.rtag.hidden { display: none; }
+.help-link { display: block; text-align: center; margin-top: 10px; color: var(--muted); font-size: 12px; text-decoration: underline; cursor: pointer; }
+.help-link:hover { color: var(--text); }
+.rules-list { font-size: 13px; color: var(--text); line-height: 1.6; padding-left: 18px; }
+.rules-list li { margin-bottom: 6px; }
+@keyframes fi { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+.fi { animation: fi 0.3s ease forwards; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="vtag">v1.0.0</div>
+  <div class="rtag hidden" id="rtag">RONDA 1</div>
+  <div class="glow g1"></div>
+  <div class="glow g2"></div>
+
+  <!-- CONFIG MODAL -->
+  <div class="mwrap" id="cfgM">
+    <div class="modal">
+      <div class="mtit">Configura Firebase</div>
+      <div class="msub">Proyecto Firebase gratuito para el multijugador.</div>
+      <div class="msteps">
+        1. <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a><br>
+        2. Nuevo proyecto → Realtime Database → Crear<br>
+        3. Modo prueba → Siguiente<br>
+        4. Configuración → Agrega app web → copia los datos
+      </div>
+      <div class="mfield"><label>Database URL</label><input type="text" id="cfgUrl" placeholder="https://proyecto-rtdb.firebaseio.com"></div>
+      <div class="mfield"><label>API Key</label><input type="text" id="cfgKey" placeholder="AIzaSy..."></div>
+      <div class="mfield"><label>Project ID</label><input type="text" id="cfgPid" placeholder="mi-proyecto-12345"></div>
+      <div class="merr" id="cfgErr"></div>
+      <button class="btn btn-p" onclick="initFB()">Conectar →</button>
+    </div>
+  </div>
+
+  <!-- RULES MODAL -->
+  <div class="mwrap hidden" id="rulesM">
+    <div class="modal">
+      <div class="mtit">Cómo se juega</div>
+      <div class="msub">Cartas Contra Amigos en 30 segundos</div>
+      <ol class="rules-list">
+        <li>Cada ronda hay un <strong>Card Czar</strong> (juez) que rota.</li>
+        <li>El Czar revela una <strong>carta negra</strong> (con huecos).</li>
+        <li>Los demás juegan <strong>cartas blancas</strong> de su mano para completarla.</li>
+        <li>El Czar lee todas las combinaciones anónimas y elige la más graciosa.</li>
+        <li>El ganador de esa ronda gana <strong>1 punto</strong>.</li>
+        <li>Primero en llegar a la meta de puntos gana la partida.</li>
+      </ol>
+      <button class="btn btn-p" onclick="hideRules()" style="margin-top:16px;">Entendido</button>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div class="screen center" id="sHome">
+    <div class="logo">Cartas Contra Amigos</div>
+    <div class="tagline">EL JUEGO PARA HORRORIZAR A TUS AMIGOS</div>
+    <div class="card">
+      <span class="lbl">Tu nombre</span>
+      <input type="text" class="name-in" id="pName" placeholder="¿Cómo te llamas?" maxlength="16" style="margin-bottom:18px;">
+      <span class="lbl">Código de sala</span>
+      <input type="text" id="joinCode" placeholder="XXXX" maxlength="4">
+      <button class="btn btn-p" onclick="joinRoom()" style="margin-bottom:10px;">Entrar →</button>
+      <div class="divider">o crea una nueva</div>
+      <button class="btn btn-s" onclick="createRoom()">Crear sala</button>
+    </div>
+    <button class="btn btn-ghost" onclick="showCfg()" style="margin-top:14px;">Firebase</button>
+    <span class="help-link" onclick="showRules()">¿Cómo se juega?</span>
+  </div>
+
+  <!-- LOBBY -->
+  <div class="screen hidden" id="sLobby">
+    <div style="width:100%;max-width:420px;" class="fi">
+      <div class="code-box">
+        <div style="font-size:10px;color:var(--muted);letter-spacing:0.12em;margin-bottom:6px;">CÓDIGO DE SALA</div>
+        <div class="code-val" id="dCode">----</div>
+        <div class="code-hint">comparte este código con tus amigos</div>
+      </div>
+      <div class="sec">Jugadores (<span id="pCnt">1</span>/10)</div>
+      <div class="plist" id="pList"></div>
+
+      <div class="sec" id="cfgSec" style="margin-top:12px;">Configuración</div>
+      <div class="settings-block" id="settingsBlock">
+        <div class="lbl">Puntos para ganar</div>
+        <div class="sel-grid" id="winGrid"></div>
+      </div>
+      <button class="btn btn-p hidden" id="startBtn" onclick="startGame()">Empezar partida</button>
+      <div id="gWait" class="hidden" style="text-align:center;padding:18px 12px;color:var(--muted);font-size:13px;">
+        🔒 Solo el host puede editar la configuración
+      </div>
+      <span class="help-link" onclick="showRules()">¿Cómo se juega?</span>
+    </div>
+  </div>
+
+  <!-- PLAYING — PLAYER (non-czar) -->
+  <div class="screen hidden" id="sPlayer">
+    <div class="gwrap fi">
+      <div class="gtop">
+        <div>Card Czar: <span class="gczar" id="pCzarName">—</span></div>
+        <div id="pPts">— pts</div>
+      </div>
+      <div class="bwrap"><div class="bcard" id="pBcard"></div></div>
+      <div class="ctitle" id="pTitle">Elige tu carta</div>
+      <div class="csub" id="pSub">Toca una carta de tu mano</div>
+      <div class="hand-grid" id="pHand"></div>
+      <div class="confirm-row" id="pConfirm" style="display:none;">
+        <button class="btn btn-s" onclick="clearSelection()">Limpiar</button>
+        <button class="btn btn-p" id="pSubmitBtn" onclick="submitCards()">Enviar</button>
+      </div>
+      <div id="pWait" class="hidden" style="margin-top:12px;">
+        <div class="csub">Esperando a los demás...</div>
+        <div id="pWaitList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAYING — CZAR (waiting for submissions) -->
+  <div class="screen hidden" id="sCzar">
+    <div class="gwrap fi">
+      <div class="gtop">
+        <div>Eres el <span class="gczar">Card Czar</span></div>
+        <div id="czPts">— pts</div>
+      </div>
+      <div class="bwrap"><div class="bcard" id="czBcard"></div></div>
+      <div class="ctitle">Esperando jugadas...</div>
+      <div class="csub">Cuando todos hayan enviado, elegirás la mejor.</div>
+      <div id="czWaitList" style="margin-top:14px;"></div>
+    </div>
+  </div>
+
+  <!-- JUDGING — CZAR picks -->
+  <div class="screen hidden" id="sJudge">
+    <div class="gwrap fi">
+      <div class="gtop">
+        <div>Eres el <span class="gczar">Card Czar</span></div>
+        <div id="jPts">— pts</div>
+      </div>
+      <div class="bwrap"><div class="bcard" id="jBcard"></div></div>
+      <div class="ctitle">Elige la ganadora</div>
+      <div class="csub">Toca la combinación más graciosa</div>
+      <div class="subs-grid" id="jSubs"></div>
+    </div>
+  </div>
+
+  <!-- JUDGING — non-czars watch -->
+  <div class="screen hidden" id="sWatch">
+    <div class="gwrap fi">
+      <div class="gtop">
+        <div>Card Czar: <span class="gczar" id="wCzarName">—</span></div>
+        <div id="wPts">— pts</div>
+      </div>
+      <div class="bwrap"><div class="bcard" id="wBcard"></div></div>
+      <div class="ctitle">El Czar está decidiendo...</div>
+      <div class="csub">Estas son todas las jugadas (anónimas)</div>
+      <div class="subs-grid" id="wSubs"></div>
+    </div>
+  </div>
+
+  <!-- REVEAL -->
+  <div class="screen hidden" id="sReveal">
+    <div class="gwrap fi">
+      <div class="gtop">
+        <div>Ronda <span id="rvRound">—</span></div>
+        <div id="rvPts">— pts</div>
+      </div>
+      <div class="bwrap"><div class="bcard" id="rvBcard"></div></div>
+      <div class="ctitle" style="color:var(--green);">¡Ganador: <span id="rvWinName">—</span>!</div>
+      <div class="csub" id="rvWinSub">+1 punto</div>
+      <div id="rvWinCard" style="margin: 14px 0;"></div>
+      <div class="rbox">
+        <div class="rhint">¿Listos para la siguiente ronda?</div>
+        <div class="rchips" id="rvChips"></div>
+        <button class="btn btn-p" id="rvReadyBtn" onclick="voteReady()">Estoy listo</button>
+        <div id="rvHostInfo" class="hidden" style="text-align:center;color:var(--muted);font-size:12px;margin-top:8px;">Esperando al host...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS (final) -->
+  <div class="screen hidden" id="sResults">
+    <div style="width:100%;max-width:420px;" class="fi">
+      <div class="rtit">🏆 Fin de la partida</div>
+      <div class="rsub" id="rsSub">—</div>
+      <div id="rsList" style="margin-bottom:14px;"></div>
+      <div class="rbox">
+        <button class="btn btn-p" onclick="backToLobby()">Nueva partida →</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast hidden" id="tst"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getDatabase, ref, set, get, onValue, update, remove } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+/* ═══════════════════════════════════════════════
+   DECK — CAH base adaptado al castellano (CC BY-NC-SA 2.0)
+   Black: [text, pick]. "_____" es el hueco.
+═══════════════════════════════════════════════ */
+const BLACK = [
+  ["_____ + _____ = _____.", 3],
+  ["¿Qué hay en mi pantalón?", 1],
+  ["¿Cuál es mi superpoder secreto?", 1],
+  ["¿De qué se quejan siempre los viejos?", 1],
+  ["La próxima de Pixar: una conmovedora historia sobre _____.", 1],
+  ["_____: eso es lo último que necesitaba.", 1],
+  ["¡ATENCIÓN! No comprar _____. Contiene _____.", 2],
+  ["¿Qué no me deja dormir por la noche?", 1],
+  ["¿Qué me hizo llorar en el avión?", 1],
+  ["En su debut como rapero, el Rey emérito sorprendió con su éxito \"_____\".", 1],
+  ["_____: bueno hasta la última gota.", 1],
+  ["La nueva fragancia de Calvin Klein: _____.", 1],
+  ["El nuevo deporte olímpico: _____.", 1],
+  ["¿Por qué me echaron del Vaticano?", 1],
+  ["¿Qué le pondré a mi tarta de cumpleaños este año?", 1],
+  ["Antes de hacerme funcionario, lo que más echaré de menos es _____.", 1],
+  ["Mamá, ¿por qué los demás niños se ríen de mí?", 1],
+  ["_____: mejor que el sexo.", 1],
+  ["Pedí mi primer trabajo, pero el jefe me rechazó por _____.", 1],
+  ["¿Qué me regalaron por mis 18?", 1],
+  ["Estoy salvando el mundo con _____.", 1],
+  ["_____: exactamente así huele el infierno.", 1],
+  ["Mi psicólogo dice que mis problemas vienen de _____ y de _____.", 2],
+  ["Conocí al amor de mi vida en _____.", 1],
+  ["Cita de Tinder bien: _____. Cita de Tinder mal: _____.", 2],
+  ["¿Qué descubriría la policía al registrar mi casa?", 1],
+  ["Cuando llegue al poder, lo primero que me cargo es _____.", 1],
+  ["Los duques de Sussex ya tienen nombre para su tercer hijo: _____.", 1],
+  ["_____: hagamos que vuelva a estar de moda.", 1],
+  ["Si yo fuera presidente, mi primer decreto sería: _____.", 1],
+  ["_____ es lo que me hace especial.", 1],
+  ["La nueva serie de Netflix se llama _____ y trata sobre _____.", 2],
+  ["Anoche soñé con _____. Necesito un psicólogo.", 1],
+  ["Mamá entró en mi cuarto y me pilló con _____.", 1],
+  ["¿Qué encontré debajo de la cama de mis padres?", 1],
+  ["El gran secreto de la felicidad es _____.", 1],
+  ["Mi nueva startup: una app para _____.", 1],
+  ["_____: ese es mi kink.", 1],
+  ["A partir de la tercera copa, todos acabamos hablando de _____.", 1],
+  ["El primer paso para superar una ruptura es _____.", 1],
+  ["Si vamos a la playa, no podemos olvidar _____.", 1],
+  ["Me hice rico vendiendo _____.", 1],
+  ["_____: eso es lo que veo cuando cierro los ojos.", 1],
+  ["¿Qué hace ruido a las 3 de la madrugada?", 1],
+  ["Para tener una buena cita necesitas _____ y _____.", 2],
+  ["Lo más raro que he hecho borracho es _____.", 1],
+  ["¿Qué tiene en común una boda con _____?", 1],
+  ["El abuelo siempre decía: \"En la guerra aprendí lo que es _____\".", 1],
+  ["_____: eso fue lo que mató al gato.", 1],
+  ["Mi terapeuta dice que tengo que aceptar _____.", 1],
+  ["En mi tiempo libre me dedico a _____.", 1],
+  ["Las elecciones de este año se decidirán por _____.", 1],
+  ["Acabo de descubrir que mi pareja es _____. Y me parece bien.", 1],
+  ["Vuelvo a la vida monástica para alejarme de _____.", 1],
+  ["El nuevo perfume del Vaticano: \"_____, por Su Santidad\".", 1],
+  ["Cuando muera, esparcid mis cenizas en _____.", 1],
+  ["¡_____, por fin libre de _____!", 2],
+  ["Lo que más extraño de mi infancia es _____.", 1],
+  ["Menú degustación michelín: _____, _____ y _____.", 3],
+  ["El próximo libro de autoayuda: \"_____: el secreto del éxito\".", 1],
+  ["Para sobrevivir a una resaca hace falta _____.", 1],
+  ["¿Por qué llora el bebé?", 1],
+  ["_____: por eso ya no hablo con mi familia.", 1],
+  ["Tengo miedo a _____ y a _____.", 2],
+  ["Acabo de inventar la dieta de _____. ¡Funciona!", 1],
+  ["La biografía no autorizada del Papa se llamará \"_____\".", 1],
+  ["El nuevo single de Bad Bunny: \"_____\".", 1],
+  ["_____: cuando lo simple ya no es suficiente.", 1],
+  ["Mi última excusa para llegar tarde al trabajo: _____.", 1],
+  ["Lo que no te enseñan en el colegio: _____.", 1],
+  ["Si fuera un superhéroe, mi villano sería _____.", 1],
+  ["_____: el nuevo capítulo de Black Mirror.", 1],
+  ["Los romanos cayeron por _____.", 1],
+  ["_____: por eso acabé en urgencias.", 1],
+  ["La gran sorpresa del Mundial: _____.", 1],
+  ["Mi vida sería perfecta si no fuera por _____.", 1],
+  ["Lo único que me alegra los lunes es _____.", 1],
+  ["¿Qué encontró el técnico de la lavadora?", 1],
+  ["El nuevo emoji de WhatsApp: _____.", 1],
+  ["Mi terapeuta me dijo que dejara de pensar en _____.", 1],
+  ["¿Qué le pediría a Papá Noel si todavía creyera?", 1],
+  ["Acabo de descubrir mi nuevo fetiche: _____.", 1],
+  ["La cena más incómoda de mi vida: _____, _____ y mi suegra.", 2],
+  ["¿Qué hay en la mochila del niño de Pesadilla en Elm Street?", 1],
+  ["El siguiente reto viral de TikTok: _____.", 1],
+];
+
+/* ═══════════════════════════════════════════════
+   WHITE CARDS — respuestas adaptadas al humor castellano
+═══════════════════════════════════════════════ */
+const WHITE = [
+  "Ser un piromaníaco.",
+  "Las erecciones inoportunas.",
+  "El divorcio.",
+  "Mi infancia traumática.",
+  "Una crisis existencial.",
+  "Eructar el alfabeto.",
+  "Las plantas suculentas.",
+  "La gentrificación.",
+  "La menstruación.",
+  "Los abuelos racistas.",
+  "La adicción al móvil.",
+  "Un orgasmo accidental.",
+  "Una depresión bien gorda.",
+  "Comer pegamento de niño.",
+  "Una madre tóxica.",
+  "Un padre ausente.",
+  "La menopausia.",
+  "Una bofetada con la mano abierta.",
+  "Tinder.",
+  "Estar borracho a las 11 de la mañana.",
+  "Hitler con buenas intenciones.",
+  "La caída del comunismo.",
+  "Los Power Rangers.",
+  "Un grito ahogado.",
+  "Vomitar en el metro.",
+  "Una buena siesta.",
+  "El olor a viejo.",
+  "Los pedos en el ascensor.",
+  "Llorar en la oficina.",
+  "Los memes de gatos.",
+  "La ansiedad social.",
+  "Una sobredosis de melatonina.",
+  "Los influencers fitness.",
+  "Un brujo en bañador.",
+  "Hacerle ghosting a mi madre.",
+  "El mansplaining.",
+  "Una ruptura por WhatsApp.",
+  "Mojar la cama a los 30.",
+  "Mi Spotify Wrapped.",
+  "Bautizar al niño \"Kevin\".",
+  "Pasar la ITV.",
+  "Una multa de la DGT.",
+  "La paguita.",
+  "Hacer la declaración de la renta llorando.",
+  "Cobrar en negro.",
+  "Una receta de la abuela.",
+  "Llorar viendo Up.",
+  "Ser hijo único.",
+  "El primer beso.",
+  "Una mujer con bigote.",
+  "El amor de mi vida.",
+  "Comer cebolla cruda.",
+  "Un eructo majestuoso.",
+  "La crisis de los 40.",
+  "El Brexit.",
+  "Una resaca de tres días.",
+  "El metaverso.",
+  "Pillar a mi padre llorando.",
+  "Una despedida de soltero en Lloret.",
+  "Mear contra un árbol.",
+  "Un selfie en un funeral.",
+  "La playa de Benidorm en agosto.",
+  "El Mercadona un domingo.",
+  "Montar muebles del IKEA.",
+  "Una bronca en el grupo de WhatsApp.",
+  "El primo pesado.",
+  "La cuñada de Sálvame.",
+  "Una pizza con piña.",
+  "Beber agua del grifo de Madrid.",
+  "El reggaeton a las 6 de la mañana.",
+  "Una cita a ciegas.",
+  "Quedarme dormido en una boda.",
+  "Hablar con el de Movistar.",
+  "Una mascarilla de tela de mi abuela.",
+  "Belén Esteban.",
+  "Risto Mejide.",
+  "La canción del verano.",
+  "Sálvame Deluxe.",
+  "Llorar viendo Eurovisión.",
+  "Vender el alma al diablo.",
+  "Acabar en urgencias.",
+  "Una infección de orina.",
+  "Un grano enorme en la frente.",
+  "La cuesta de enero.",
+  "Una llamada del banco.",
+  "Hipotecarme a 40 años.",
+  "Vivir con mis padres a los 35.",
+  "Una entrevista de trabajo desastrosa.",
+  "Coger el vuelo equivocado.",
+  "Una caca de paloma en el ojo.",
+  "Robar la wifi del vecino.",
+  "Una llamada de la suegra a las 8.",
+  "La cena de Navidad familiar.",
+  "Las uvas de Nochevieja con piel.",
+  "Un masaje muy raro.",
+  "Una vidente del barrio.",
+  "Quemar el arroz.",
+  "Comer del táper de otro.",
+  "El olor del metro en agosto.",
+  "Una manifestación cualquiera.",
+  "El telediario de Antena 3.",
+  "Iker Jiménez explicando los chemtrails.",
+  "Una procesión en Semana Santa.",
+  "San Fermín y un toro suelto.",
+  "Una corrida de toros lloviendo.",
+  "El flamenco a las 4 de la mañana.",
+  "Una mascletà en plena cara.",
+  "La paella del lunes recalentada.",
+  "Sangría con gaseosa.",
+  "Tinto de verano en vasito de plástico.",
+  "Calimocho con cartón.",
+  "Litros en el parque.",
+  "Botellón en la plaza.",
+  "El kebab de las 5 de la mañana.",
+  "Una pizza congelada del Lidl.",
+  "Pasta cocida tres minutos.",
+  "Ir al gimnasio una vez.",
+  "Cancelar el gimnasio el día 2.",
+  "La dieta del lunes.",
+  "Un atracón de helado a las 2 de la mañana.",
+  "Mojar el churro en el café.",
+  "Pisar un Lego descalzo.",
+  "El despertador de los lunes.",
+  "Llegar tarde a mi propia boda.",
+  "Olvidarme los anillos.",
+  "Perder el pasaporte.",
+  "Bailar la macarena.",
+  "El Aserejé.",
+  "Las Ketchup.",
+  "Camilo Sesto en concierto.",
+  "Una clase de filosofía.",
+  "Copiar en el examen.",
+  "Repetir curso.",
+  "La selectividad.",
+  "Una fiesta universitaria.",
+  "Vomitar en la fiesta.",
+  "Despertarme en casa ajena.",
+  "Despertarme sin pantalones.",
+  "Una foto comprometida.",
+  "Sextear con el ex.",
+  "Bloquear a alguien y desbloquearlo.",
+  "Stalkear el Insta de mi ex.",
+  "Un story con 0 visualizaciones.",
+  "Likes de un bot ruso.",
+  "Que me cancelen en Twitter.",
+  "Disculparme con un comunicado en notas.",
+  "Borrar mi cuenta y crearla otra vez.",
+  "Una crisis de identidad.",
+  "Bailar en la cocina solo.",
+  "Cantar en la ducha.",
+  "Hablar solo en voz alta en el supermercado.",
+  "Una crisis de fe.",
+  "Un ataque de ansiedad en el AVE.",
+  "Mearme de la risa.",
+  "La menopausia masculina.",
+  "Hemorroides.",
+  "Una endodoncia sin anestesia.",
+  "Tres muelas del juicio.",
+  "Una operación de hernia.",
+  "El quirófano sin anestesia.",
+  "Una resonancia magnética claustrofóbica.",
+  "La camilla del psicólogo.",
+  "Llorar en el psicólogo.",
+  "Decir \"te quiero\" por error.",
+  "Quedarme dormido en una cita.",
+  "Roncar como una sierra mecánica.",
+  "Babear en la almohada de mi suegra.",
+  "Hablar dormido.",
+  "Un sueño erótico con un familiar.",
+  "Hambre emocional a las 2 AM.",
+  "Comerme un kilo de helado.",
+  "Una bolsa de chuches gigante.",
+  "Un Glovo a las 4 de la madrugada.",
+  "Pedir un Uber para ir a por tabaco.",
+  "Fumar a escondidas a los 30.",
+  "Cigarro electrónico de fresa.",
+  "Drogarse en un festival.",
+  "Un viaje de setas.",
+  "Una resaca emocional de dos semanas.",
+  "Confinamiento por pandemia.",
+  "Hacer pan en casa durante el COVID.",
+  "Los aplausos de las 8.",
+  "Una reunión por Zoom en calzoncillos.",
+  "Apagar la cámara y dormir.",
+  "Trabajar desde la cama.",
+  "La cafetera Nespresso.",
+  "Hacendado.",
+  "El sushi del Mercadona.",
+  "La pizza barata del Lidl.",
+  "Las galletas Príncipe.",
+  "Una merienda de Nocilla.",
+  "El Cola Cao grumoso.",
+  "Tortilla con cebolla.",
+  "Una guerra civil por la tortilla.",
+  "Mansplaining en una reunión.",
+  "Una jefa tóxica.",
+  "Reuniones que podrían haber sido un email.",
+  "Un viernes a las 7 sin terminar el informe.",
+  "Un Excel que no cuadra.",
+  "PowerPoints kilométricos.",
+  "La impresora atascada.",
+  "Café aguado de máquina.",
+  "El amigo invisible.",
+  "Pasarme con el jefe en la cena de empresa.",
+  "Beberme el sueldo en una noche.",
+  "Bizum a mí mismo.",
+  "Una transferencia urgente al casero.",
+  "El gusto exquisito de la Familia Real.",
+  "El alcohol como personalidad.",
+  "Decirle a alguien que se parece a su padre.",
+  "Una madre que te llama doce veces seguidas.",
+  "Mensajes en frío a las 3 de la mañana.",
+  "Una infección de oído.",
+  "Un cólico nefrítico.",
+  "El reflujo gástrico.",
+  "Un parto en directo.",
+  "Operarme las cataratas con láser.",
+  "Lavarme los dientes con jabón sin querer.",
+  "Mi colección de figuras de Funko Pop.",
+  "Un cosplay de Sailor Moon.",
+  "Una convención de furries.",
+  "Películas de Adam Sandler.",
+  "Las pelis de Torrente.",
+  "Un MasterChef terrible.",
+  "Las galletas de la abuela duras como piedras.",
+  "Mi ex pidiéndome dinero por Bizum.",
+  "El novio nuevo de mi madre.",
+  "El novio nuevo de mi padre.",
+  "Pedir agua del grifo en un restaurante.",
+  "No dejar propina nunca.",
+  "Esquivar al camarero para irme sin pagar.",
+  "El olor a sobaco en el bus.",
+  "Mi colección de pelusas del ombligo.",
+  "Hacerme caca encima en una reunión.",
+  "Pedos silenciosos pero letales.",
+  "Pis en el sofá.",
+  "Llorar viendo House M.D.",
+  "Esnifar Cola Cao.",
+  "Mojar el dedo en miel.",
+  "Comer galletas con leche caliente.",
+  "Dormir con el ventilador puesto en febrero.",
+  "El olor a hospital.",
+  "Una infidelidad mal disimulada.",
+  "Hacer pellas para ir a Eurodisney.",
+  "Tirarme un pedo en el ascensor lleno.",
+  "Una madre que te avergüenza en público.",
+  "Un padre vestido de Spiderman a los 50.",
+  "Un mago de cumple infantil con ansiedad.",
+  "Una mascarilla quirúrgica usada.",
+  "Mis problemas con la autoridad.",
+  "Una multa por mear en la calle.",
+  "Romper aguas en el supermercado.",
+  "Una hemorragia nasal en el cine.",
+  "Esnifar pegamento.",
+  "Dormirme con las lentillas puestas.",
+  "Confundir al vecino con un fantasma.",
+  "Una orgía pacheca.",
+  "El comunismo bien hecho.",
+  "El fin del mundo en bermudas.",
+  "Mi obsesión con los osos polares.",
+  "Una guerra mundial por una baguette.",
+  "Que se me caiga el iPhone en el váter.",
+  "Un sermón del cura del pueblo.",
+  "La Virgen apareciéndose en una tostada.",
+  "Un milagro en Lourdes.",
+  "Una procesión sin penitentes.",
+  "El verano del 92.",
+  "Una boda gitana.",
+  "Una comunión en el restaurante chino.",
+  "Mi tío contando batallitas de la mili.",
+  "Pasar las navidades con Vox.",
+  "Una sobremesa de cuatro horas.",
+  "El cuñado dando lecciones de economía.",
+  "Una jubilación anticipada.",
+  "Ganar la lotería y no contárselo a nadie.",
+  "Una herencia llena de deudas.",
+  "Vivir en una furgoneta.",
+  "Mudarme a vivir al monte.",
+  "Una secta esotérica del barrio.",
+  "Un coach motivacional en LinkedIn.",
+  "El pacto verde europeo.",
+  "Una huelga general.",
+  "Un atasco en la M-30.",
+  "El tráfico de Madrid en hora punta.",
+  "Una ITV fallida.",
+  "Aparcar en doble fila.",
+  "Una multa por aparcar mal.",
+  "El TDAH no diagnosticado.",
+  "Trastornos alimenticios.",
+  "Mi novia imaginaria.",
+  "Un poliamor mal gestionado.",
+  "Hacer un trío con dos enemigos.",
+  "Sexo entre primos lejanos.",
+  "Una orgía en el polideportivo municipal.",
+  "Una intervención divina.",
+  "El espíritu santo en forma de paloma cabreada.",
+  "Una novicia rebelde.",
+  "Un convento con WiFi.",
+  "El opus dei.",
+  "Los Testigos de Jehová a las 9 de la mañana.",
+  "Los mormones en bici.",
+  "Una conversión religiosa al sushi.",
+  "El veganismo militante.",
+  "Un asado interminable.",
+  "La carne de caballo del IKEA.",
+  "Comer pulpo vivo.",
+  "Una cena romántica en el Burger King.",
+  "Un menú de McDonald's en la luna de miel.",
+];
+
+/* ═══════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════ */
+const COLORS = ['#8b7cf8','#4ade80','#fb923c','#f87171','#38bdf8','#e879f9','#fbbf24','#a3e635','#22d3ee','#fb7185'];
+const HAND_SIZE = 10;
+const MAX_PLAYERS = 10;
+
+let app = null, db = null, roomRef = null, roomCode = null, myId = null, gs = null, isHost = false;
+let lastPhaseKey = null;
+let applyingRemote = false;
+let selectedCards = []; // local: indices into hand picked for submission
+
+// settings (host editable)
+let selWinScore = 7;
+
+/* ═══════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════ */
+const ss = id => document.querySelectorAll('.screen').forEach(s => s.classList.toggle('hidden', s.id !== id));
+const gc = () => Array.from({length:4},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*32)]).join('');
+const gi = () => 'p'+Math.random().toString(36).slice(2,9);
+const ini = n => (n||'?').slice(0,2).toUpperCase();
+const col = i => COLORS[i % COLORS.length];
+const sh = a => { for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const toast = (msg, ms=2200) => {
+  const t = document.getElementById('tst');
+  t.textContent = msg; t.classList.remove('hidden');
+  clearTimeout(toast._iv); toast._iv = setTimeout(()=>t.classList.add('hidden'), ms);
+};
+
+// Fill a black card template, replacing _____ with provided text fragments (in order)
+function fillBlack(blackIdx, whiteIdxs, highlight=false) {
+  const [text, pick] = BLACK[blackIdx];
+  let out = text;
+  const parts = whiteIdxs && whiteIdxs.length ? whiteIdxs : null;
+  let i = 0;
+  out = out.replace(/_____/g, () => {
+    if (parts && parts[i] !== undefined) {
+      const w = WHITE[parts[i++]].replace(/\.$/, '');
+      return highlight ? `<strong style="color:var(--purple);">${w}</strong>` : `<strong>${w}</strong>`;
+    }
+    return '<span style="color:var(--muted);">_____</span>';
+  });
+  return out;
+}
+
+/* ═══════════════════════════════════════════════
+   FIREBASE INIT
+═══════════════════════════════════════════════ */
+window.showCfg = () => {
+  document.getElementById('cfgM').classList.remove('hidden');
+  const c = JSON.parse(localStorage.getItem('cah_cfg') || '{}');
+  if (c.url) document.getElementById('cfgUrl').value = c.url;
+  if (c.key) document.getElementById('cfgKey').value = c.key;
+  if (c.pid) document.getElementById('cfgPid').value = c.pid;
+};
+window.hideCfg = () => document.getElementById('cfgM').classList.add('hidden');
+window.showRules = () => document.getElementById('rulesM').classList.remove('hidden');
+window.hideRules = () => document.getElementById('rulesM').classList.add('hidden');
+
+window.initFB = async () => {
+  const url = document.getElementById('cfgUrl').value.trim();
+  const key = document.getElementById('cfgKey').value.trim();
+  const pid = document.getElementById('cfgPid').value.trim();
+  const err = document.getElementById('cfgErr');
+  err.textContent = '';
+  if (!url || !key || !pid) { err.textContent = 'Faltan datos.'; return; }
+  try {
+    app = initializeApp({ apiKey: key, authDomain: pid+'.firebaseapp.com', databaseURL: url, projectId: pid });
+    db = getDatabase(app);
+    // probe
+    await get(ref(db, '.info/connected')).catch(()=>{});
+    localStorage.setItem('cah_cfg', JSON.stringify({url, key, pid}));
+    document.getElementById('cfgM').classList.add('hidden');
+    toast('Firebase conectado');
+  } catch(e) {
+    err.textContent = 'Error de conexión: '+e.message;
+  }
+};
+
+async function autoConnect() {
+  const c = JSON.parse(localStorage.getItem('cah_cfg') || '{}');
+  if (!c.url || !c.key || !c.pid) return;
+  try {
+    app = initializeApp({ apiKey: c.key, authDomain: c.pid+'.firebaseapp.com', databaseURL: c.url, projectId: c.pid });
+    db = getDatabase(app);
+    document.getElementById('cfgM').classList.add('hidden');
+  } catch(e) {/* ignore */}
+}
+
+/* ═══════════════════════════════════════════════
+   ROOM CREATE / JOIN
+═══════════════════════════════════════════════ */
+window.createRoom = async () => {
+  if (!db) { document.getElementById('cfgM').classList.remove('hidden'); return; }
+  const name = (document.getElementById('pName').value || '').trim();
+  if (!name) { toast('Pon tu nombre'); return; }
+  myId = gi();
+  roomCode = gc();
+  isHost = true;
+  const players = {}; players[myId] = { name, color: col(0), t: Date.now() };
+  await set(ref(db, 'rooms_cah/'+roomCode), {
+    host: myId,
+    phase: 'lobby',
+    players,
+    playerOrder: [myId],
+    scores: {},
+    round: 0,
+    winScore: selWinScore,
+    lobbyConfig: { winScore: selWinScore },
+  });
+  listenRoom();
+};
+
+window.joinRoom = async () => {
+  if (!db) { document.getElementById('cfgM').classList.remove('hidden'); return; }
+  const name = (document.getElementById('pName').value || '').trim();
+  const code = (document.getElementById('joinCode').value || '').trim().toUpperCase();
+  if (!name) { toast('Pon tu nombre'); return; }
+  if (code.length !== 4) { toast('Código inválido'); return; }
+  const snap = await get(ref(db, 'rooms_cah/'+code));
+  if (!snap.exists()) { toast('Sala no encontrada'); return; }
+  const room = snap.val();
+  if (room.phase !== 'lobby') { toast('La partida ya empezó'); return; }
+  const ps = room.players || {};
+  if (Object.keys(ps).length >= MAX_PLAYERS) { toast('Sala llena'); return; }
+  myId = gi();
+  roomCode = code;
+  isHost = false;
+  const order = room.playerOrder || Object.keys(ps);
+  const idx = order.length;
+  await update(ref(db, 'rooms_cah/'+roomCode), {
+    [`players/${myId}`]: { name, color: col(idx), t: Date.now() },
+    playerOrder: [...order, myId],
+  });
+  listenRoom();
+};
+
+function listenRoom() {
+  roomRef = ref(db, 'rooms_cah/'+roomCode);
+  onValue(roomRef, snap => {
+    if (!snap.exists()) { toast('Sala cerrada'); location.reload(); return; }
+    gs = snap.val();
+    if (!gs.players || !gs.players[myId]) { toast('Te han echado'); location.reload(); return; }
+    render(gs);
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   LOBBY
+═══════════════════════════════════════════════ */
+function buildWinGrid() {
+  const grid = document.getElementById('winGrid');
+  grid.innerHTML = '';
+  [5,7,10,99].forEach(v => {
+    const d = document.createElement('div');
+    d.className = 'sel-btn' + (selWinScore === v ? ' on' : '');
+    d.textContent = v === 99 ? '∞' : v;
+    d.onclick = () => { if(!isHost) return; selWinScore = v; buildWinGrid(); saveSettings(); };
+    grid.appendChild(d);
+  });
+}
+
+function saveSettings() {
+  if (!isHost || !roomRef || applyingRemote) return;
+  update(roomRef, { lobbyConfig: { winScore: selWinScore }, winScore: selWinScore });
+}
+
+function applyRemoteSettings(cfg) {
+  if (!cfg || isHost) return;
+  applyingRemote = true;
+  if (cfg.winScore !== undefined) selWinScore = cfg.winScore;
+  buildWinGrid();
+  applyingRemote = false;
+}
+
+function renderLobby(s) {
+  document.getElementById('dCode').textContent = roomCode;
+  const ps = s.players || {};
+  const order = s.playerOrder || Object.keys(ps);
+  document.getElementById('pCnt').textContent = order.length;
+  const list = document.getElementById('pList');
+  list.innerHTML = '';
+  order.forEach((id, i) => {
+    if (!ps[id]) return;
+    const p = ps[id];
+    const row = document.createElement('div');
+    row.className = 'prow' + (id === myId ? ' me' : '');
+    row.innerHTML = `
+      <div class="av" style="background:${p.color || col(i)};color:#0a0710;">${ini(p.name)}</div>
+      <div class="pname">${p.name}${id === myId ? ' (tú)' : ''}</div>
+      ${id === s.host ? '<span class="badge">HOST</span>' : ''}
+    `;
+    list.appendChild(row);
+  });
+  document.getElementById('settingsBlock').classList.toggle('readonly', !isHost);
+  document.getElementById('startBtn').classList.toggle('hidden', !isHost || order.length < 3);
+  document.getElementById('gWait').classList.toggle('hidden', isHost);
+  if (!isHost && s.lobbyConfig) applyRemoteSettings(s.lobbyConfig);
+  ss('sLobby');
+  document.getElementById('rtag').classList.add('hidden');
+}
+
+/* ═══════════════════════════════════════════════
+   START GAME
+═══════════════════════════════════════════════ */
+window.startGame = async () => {
+  if (!isHost || !roomRef) return;
+  const order = gs.playerOrder || Object.keys(gs.players);
+  if (order.length < 3) { toast('Mínimo 3 jugadores'); return; }
+  // Build & shuffle decks
+  const blackDeck = sh([...Array(BLACK.length).keys()]);
+  const whiteDeck = sh([...Array(WHITE.length).keys()]);
+  // Deal HAND_SIZE white cards to each player
+  const hands = {};
+  order.forEach(id => {
+    hands[id] = whiteDeck.splice(0, HAND_SIZE);
+  });
+  // Draw first black
+  const blackCard = blackDeck.shift();
+  const scores = {};
+  order.forEach(id => { scores[id] = 0; });
+  await update(roomRef, {
+    phase: 'playing',
+    round: 1,
+    czarIdx: 0,
+    blackCard,
+    blackDeck,
+    whiteDeck,
+    hands,
+    submissions: null,
+    winner: null,
+    readyVotes: null,
+    scores,
+    winScore: selWinScore,
+  });
+};
+
+/* ═══════════════════════════════════════════════
+   RENDER DISPATCHER
+═══════════════════════════════════════════════ */
+function render(s) {
+  if (s.phase === 'lobby') { renderLobby(s); lastPhaseKey = null; return; }
+  // rtag
+  const tag = document.getElementById('rtag');
+  tag.textContent = `RONDA ${s.round || '?'}`;
+  tag.classList.remove('hidden');
+  // dispatch
+  if (s.phase === 'playing') renderPlaying(s);
+  else if (s.phase === 'judging') renderJudging(s);
+  else if (s.phase === 'reveal') renderReveal(s);
+  else if (s.phase === 'results') renderResults(s);
+}
+
+/* ═══════════════════════════════════════════════
+   PLAYING — submit phase
+═══════════════════════════════════════════════ */
+function renderPlaying(s) {
+  const order = s.playerOrder || [];
+  const czarId = order[s.czarIdx % order.length];
+  const ps = s.players || {};
+  const subs = s.submissions || {};
+  const isCzar = (myId === czarId);
+  // Reset local selection on phase change
+  const pkey = `play_${s.round}_${s.czarIdx}`;
+  if (lastPhaseKey !== pkey) {
+    lastPhaseKey = pkey;
+    selectedCards = [];
+  }
+
+  // Host-authoritative: comprobar avance a judging desde cualquier render
+  // (cubre el caso en que el host es el Czar y nunca llama a submitCards)
+  if (isHost) {
+    const required = order.filter(id => id !== czarId && ps[id]);
+    if (required.length > 0 && required.every(id => subs[id])) {
+      maybeAdvanceToJudging();
+    }
+  }
+
+  if (isCzar) {
+    ss('sCzar');
+    document.getElementById('czBcard').innerHTML = renderBlackCardHTML(s.blackCard);
+    document.getElementById('czPts').textContent = (s.scores?.[myId] || 0) + ' pts';
+    const waitList = document.getElementById('czWaitList');
+    waitList.innerHTML = '';
+    order.forEach(id => {
+      if (id === czarId) return;
+      const p = ps[id]; if (!p) return;
+      const done = !!subs[id];
+      const row = document.createElement('div');
+      row.className = 'waitline';
+      row.innerHTML = `
+        <div class="wname">${p.name}</div>
+        <span class="badge ${done ? 'done' : ''}">${done ? '✓ ENVIADO' : 'ESPERANDO'}</span>
+      `;
+      waitList.appendChild(row);
+    });
+    return;
+  }
+
+  // Non-czar player
+  ss('sPlayer');
+  document.getElementById('pCzarName').textContent = ps[czarId]?.name || '—';
+  document.getElementById('pPts').textContent = (s.scores?.[myId] || 0) + ' pts';
+  document.getElementById('pBcard').innerHTML = renderBlackCardHTML(s.blackCard);
+  const pick = BLACK[s.blackCard][1];
+  const alreadySubmitted = !!subs[myId];
+  const hand = (s.hands?.[myId]) || [];
+
+  if (alreadySubmitted) {
+    document.getElementById('pHand').innerHTML = '';
+    document.getElementById('pTitle').textContent = '✓ Carta enviada';
+    document.getElementById('pSub').textContent = 'Esperando a los demás...';
+    document.getElementById('pConfirm').style.display = 'none';
+    const wait = document.getElementById('pWait'); wait.classList.remove('hidden');
+    const wl = document.getElementById('pWaitList'); wl.innerHTML = '';
+    order.forEach(id => {
+      if (id === czarId) return;
+      const p = ps[id]; if (!p) return;
+      const done = !!subs[id];
+      const row = document.createElement('div');
+      row.className = 'waitline';
+      row.innerHTML = `<div class="wname">${p.name}${id === myId ? ' (tú)' : ''}</div><span class="badge ${done ? 'done' : ''}">${done ? '✓' : '…'}</span>`;
+      wl.appendChild(row);
+    });
+    return;
+  }
+
+  document.getElementById('pWait').classList.add('hidden');
+  document.getElementById('pTitle').textContent = pick === 1 ? 'Elige tu carta' : `Elige ${pick} cartas (en orden)`;
+  document.getElementById('pSub').textContent = pick === 1 ? 'Toca una carta de tu mano' : `Selecciona ${pick} cartas. El orden importa.`;
+
+  const handEl = document.getElementById('pHand');
+  handEl.innerHTML = '';
+  hand.forEach((widx, i) => {
+    const card = document.createElement('div');
+    const selIdx = selectedCards.indexOf(i);
+    card.className = 'wcard-sm' + (selIdx >= 0 ? ' sel' : '');
+    card.innerHTML = `
+      <div class="wtext">${WHITE[widx]}</div>
+      ${selIdx >= 0 && pick > 1 ? `<div class="worder">#${selIdx+1}</div>` : ''}
+    `;
+    card.onclick = () => toggleSelect(i, pick);
+    handEl.appendChild(card);
+  });
+
+  const conf = document.getElementById('pConfirm');
+  conf.style.display = selectedCards.length > 0 ? 'flex' : 'none';
+  document.getElementById('pSubmitBtn').disabled = selectedCards.length !== pick;
+  document.getElementById('pSubmitBtn').textContent = selectedCards.length === pick ? 'Enviar' : `Faltan ${pick - selectedCards.length}`;
+}
+
+function renderBlackCardHTML(blackIdx) {
+  const [text, pick] = BLACK[blackIdx];
+  const filled = text.replace(/_____/g, '<span style="color:var(--muted);">_____</span>');
+  return `
+    <div class="blabel">CARTA NEGRA</div>
+    <div class="btext">${filled}</div>
+    ${pick > 1 ? `<div class="bpick">ELIGE <span class="pdot">${pick}</span></div>` : ''}
+  `;
+}
+
+window.toggleSelect = (handIdx, pick) => {
+  const i = selectedCards.indexOf(handIdx);
+  if (i >= 0) {
+    selectedCards.splice(i, 1);
+  } else {
+    if (selectedCards.length >= pick) {
+      // replace last
+      selectedCards.pop();
+    }
+    selectedCards.push(handIdx);
+  }
+  render(gs);
+};
+
+window.clearSelection = () => { selectedCards = []; render(gs); };
+
+window.submitCards = async () => {
+  if (!roomRef || !gs) return;
+  const pick = BLACK[gs.blackCard][1];
+  if (selectedCards.length !== pick) return;
+  const hand = gs.hands?.[myId] || [];
+  const playedWhiteIdxs = selectedCards.map(i => hand[i]);
+  // Remove from hand
+  const newHand = hand.filter((_, i) => !selectedCards.includes(i));
+  // Submit
+  await update(roomRef, {
+    [`submissions/${myId}`]: playedWhiteIdxs,
+    [`hands/${myId}`]: newHand,
+  });
+  selectedCards = [];
+  // If host, also check if everyone submitted (move to judging)
+  if (isHost) await maybeAdvanceToJudging();
+};
+
+async function maybeAdvanceToJudging() {
+  if (!isHost) return;
+  const snap = await get(roomRef);
+  const s = snap.val();
+  if (!s || s.phase !== 'playing') return; // already advanced — evita doble shuffle
+  const order = s.playerOrder || [];
+  const czarId = order[s.czarIdx % order.length];
+  const required = order.filter(id => id !== czarId && s.players?.[id]);
+  if (required.length === 0) return;
+  const subs = s.submissions || {};
+  if (required.every(id => subs[id])) {
+    const submitterIds = required.slice();
+    sh(submitterIds);
+    await update(roomRef, {
+      phase: 'judging',
+      submissionOrder: submitterIds,
+    });
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   JUDGING
+═══════════════════════════════════════════════ */
+function renderJudging(s) {
+  const order = s.playerOrder || [];
+  const czarId = order[s.czarIdx % order.length];
+  const isCzar = (myId === czarId);
+  const subs = s.submissions || {};
+  const subOrder = s.submissionOrder || Object.keys(subs);
+
+  if (isCzar) {
+    ss('sJudge');
+    document.getElementById('jBcard').innerHTML = renderBlackCardHTML(s.blackCard);
+    document.getElementById('jPts').textContent = (s.scores?.[myId] || 0) + ' pts';
+    const grid = document.getElementById('jSubs');
+    grid.innerHTML = '';
+    subOrder.forEach(id => {
+      const cards = subs[id]; if (!cards) return;
+      const box = document.createElement('div');
+      box.className = 'sub-box';
+      box.innerHTML = cards.map(idx => `<div class="schunk">${WHITE[idx]}</div>`).join('');
+      box.onclick = () => pickWinner(id);
+      grid.appendChild(box);
+    });
+    return;
+  }
+
+  // Non-czar — watch
+  ss('sWatch');
+  document.getElementById('wCzarName').textContent = s.players?.[czarId]?.name || '—';
+  document.getElementById('wPts').textContent = (s.scores?.[myId] || 0) + ' pts';
+  document.getElementById('wBcard').innerHTML = renderBlackCardHTML(s.blackCard);
+  const wgrid = document.getElementById('wSubs');
+  wgrid.innerHTML = '';
+  subOrder.forEach(id => {
+    const cards = subs[id]; if (!cards) return;
+    const box = document.createElement('div');
+    box.className = 'sub-box';
+    box.innerHTML = cards.map(idx => `<div class="schunk">${WHITE[idx]}</div>`).join('');
+    wgrid.appendChild(box);
+  });
+}
+
+window.pickWinner = async (winnerId) => {
+  if (!roomRef || !gs) return;
+  const order = gs.playerOrder || [];
+  const czarId = order[gs.czarIdx % order.length];
+  if (myId !== czarId) return;
+  const subs = gs.submissions || {};
+  if (!subs[winnerId]) return;
+  const scores = { ...(gs.scores || {}) };
+  scores[winnerId] = (scores[winnerId] || 0) + 1;
+  await update(roomRef, {
+    phase: 'reveal',
+    winner: { id: winnerId, cards: subs[winnerId] },
+    scores,
+    readyVotes: null,
+  });
+};
+
+/* ═══════════════════════════════════════════════
+   REVEAL
+═══════════════════════════════════════════════ */
+function renderReveal(s) {
+  ss('sReveal');
+  document.getElementById('rvRound').textContent = s.round;
+  document.getElementById('rvPts').textContent = (s.scores?.[myId] || 0) + ' pts';
+  const w = s.winner || {};
+  document.getElementById('rvWinName').textContent = s.players?.[w.id]?.name || '—';
+  document.getElementById('rvBcard').innerHTML = `
+    <div class="blabel">CARTA NEGRA</div>
+    <div class="btext">${fillBlack(s.blackCard, w.cards, true)}</div>
+  `;
+  // Winning cards display
+  const wc = document.getElementById('rvWinCard');
+  wc.innerHTML = (w.cards || []).map(idx => `<div class="wcard-disp win" style="margin-bottom:6px;">${WHITE[idx]}</div>`).join('');
+  // Ready chips
+  const order = s.playerOrder || [];
+  const ps = s.players || {};
+  const rvotes = s.readyVotes || {};
+  const chips = document.getElementById('rvChips');
+  chips.innerHTML = '';
+  order.forEach(id => {
+    if (!ps[id]) return;
+    const c = document.createElement('div');
+    const ready = rvotes[id] === true;
+    c.className = 'chip' + (ready ? ' yes' : '');
+    c.innerHTML = `<span>${ps[id].name}</span>${ready ? '<span>✓</span>' : ''}`;
+    chips.appendChild(c);
+  });
+  const meReady = rvotes[myId] === true;
+  const btn = document.getElementById('rvReadyBtn');
+  btn.disabled = meReady;
+  btn.textContent = meReady ? '✓ Listo' : 'Estoy listo';
+  // host advance check
+  const allIds = order.filter(id => ps[id]);
+  const allReady = allIds.length > 0 && allIds.every(id => rvotes[id] === true);
+  if (allReady && isHost) advanceFromReveal();
+}
+
+window.voteReady = async () => {
+  if (!roomRef) return;
+  await update(roomRef, { [`readyVotes/${myId}`]: true });
+};
+
+async function advanceFromReveal() {
+  if (!isHost) return;
+  const snap = await get(roomRef);
+  const s = snap.val();
+  // Verify still in reveal (avoid double advance)
+  if (s.phase !== 'reveal') return;
+  const order = s.playerOrder || [];
+  const ps = s.players || {};
+  const scores = s.scores || {};
+  // Check win condition
+  const winScore = s.winScore || 7;
+  const winner = order.find(id => (scores[id] || 0) >= winScore);
+  if (winner) {
+    await update(roomRef, { phase: 'results' });
+    return;
+  }
+  // Next round
+  await nextRound(s);
+}
+
+async function nextRound(s) {
+  const order = s.playerOrder || [];
+  const ps = s.players || {};
+  // Replenish hands for non-czar players (current czar was excluded from playing)
+  const czarId = order[s.czarIdx % order.length];
+  const whiteDeck = (s.whiteDeck || []).slice();
+  const hands = { ...(s.hands || {}) };
+  const subs = s.submissions || {};
+  // Anyone who submitted needs to refill back to HAND_SIZE
+  for (const id of order) {
+    if (!ps[id]) continue;
+    const cur = (hands[id] || []).length;
+    const need = HAND_SIZE - cur;
+    if (need > 0) {
+      const newOnes = whiteDeck.splice(0, need);
+      // If we ran out, reshuffle: rebuild deck from all unused (we don't track discards; just rebuild from all whites minus current hands minus current black's winning cards)
+      if (newOnes.length < need) {
+        const inUse = new Set();
+        Object.values(hands).forEach(h => (h||[]).forEach(x => inUse.add(x)));
+        newOnes.forEach(x => inUse.add(x));
+        const rebuilt = sh([...Array(WHITE.length).keys()].filter(i => !inUse.has(i)));
+        const more = rebuilt.splice(0, need - newOnes.length);
+        whiteDeck.push(...rebuilt);
+        newOnes.push(...more);
+      }
+      hands[id] = [...(hands[id] || []), ...newOnes];
+    }
+  }
+  // Draw next black
+  let blackDeck = (s.blackDeck || []).slice();
+  if (blackDeck.length === 0) {
+    blackDeck = sh([...Array(BLACK.length).keys()].filter(i => i !== s.blackCard));
+  }
+  const blackCard = blackDeck.shift();
+  // Rotate czar
+  const nextCzarIdx = (s.czarIdx + 1) % order.length;
+  await update(roomRef, {
+    phase: 'playing',
+    round: (s.round || 1) + 1,
+    czarIdx: nextCzarIdx,
+    blackCard,
+    blackDeck,
+    whiteDeck,
+    hands,
+    submissions: null,
+    submissionOrder: null,
+    winner: null,
+    readyVotes: null,
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   RESULTS (final)
+═══════════════════════════════════════════════ */
+function renderResults(s) {
+  ss('sResults');
+  document.getElementById('rtag').classList.add('hidden');
+  const ps = s.players || {};
+  const order = s.playerOrder || Object.keys(ps);
+  const scores = s.scores || {};
+  const sorted = order.filter(id => ps[id])
+    .map(id => [id, scores[id] || 0])
+    .sort((a,b) => b[1] - a[1]);
+  const winner = sorted[0];
+  document.getElementById('rsSub').textContent = winner ? `${ps[winner[0]].name} gana con ${winner[1]} puntos` : '—';
+  const list = document.getElementById('rsList');
+  list.innerHTML = '';
+  sorted.forEach(([id, pts], i) => {
+    const p = ps[id];
+    const row = document.createElement('div');
+    row.className = 'srow' + (i === 0 ? ' top' : '');
+    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1);
+    row.innerHTML = `
+      <div class="srank">${medal}</div>
+      <div class="av" style="background:${p.color};color:#0a0710;">${ini(p.name)}</div>
+      <div class="sname">${p.name}</div>
+      <div class="spts">${pts}</div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+window.backToLobby = async () => {
+  if (!isHost || !roomRef) return;
+  await update(roomRef, {
+    phase: 'lobby',
+    round: 0,
+    scores: null,
+    hands: null,
+    submissions: null,
+    submissionOrder: null,
+    blackCard: null,
+    blackDeck: null,
+    whiteDeck: null,
+    winner: null,
+    readyVotes: null,
+    czarIdx: 0,
+  });
+};
+
+/* ═══════════════════════════════════════════════
+   BOOT
+═══════════════════════════════════════════════ */
+(async function boot(){
+  buildWinGrid();
+  await autoConnect();
+  if (db) {
+    document.getElementById('cfgM').classList.add('hidden');
+  }
+  ss('sHome');
+})();
+</script>
+</body>
+</html>
