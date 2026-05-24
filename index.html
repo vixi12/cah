@@ -99,12 +99,24 @@ input[type="text"]:focus{border-color:var(--purple)}
 .guess-row{display:flex;align-items:center;gap:8px;background:var(--surface2);border:.5px solid var(--border);border-radius:14px;padding:10px 12px}
 .guess-row.win{background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.5)}
 .guess-row.nosub{opacity:.45}
+.guess-row.bust{opacity:.55;background:rgba(248,113,113,.06);border-color:rgba(248,113,113,.3)}
 .grank{width:22px;text-align:center;font-size:14px;flex-shrink:0}
 .gname{flex:1;font-size:13px;font-weight:600}
 .gval{font-family:var(--mono);font-size:14px;font-weight:700;flex-shrink:0}
 .gdiff{font-size:11px;color:var(--muted);font-family:var(--mono);flex-shrink:0;margin-left:4px}
 .gdiff.exact{color:var(--green);font-weight:700}
 .gdiff.close{color:var(--amber)}
+.gdiff.bust{color:var(--red);font-weight:700}
+.pir-warn{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.35);border-radius:12px;padding:8px 14px;font-size:12px;color:var(--red);text-align:center;margin-bottom:10px;font-weight:600}
+.pir-toggle-wrap{display:flex;align-items:center;justify-content:space-between;padding:10px 2px;margin-top:10px}
+.pir-toggle-label{font-size:13px;font-weight:600;line-height:1.3}
+.pir-toggle-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.pir-toggle{position:relative;width:44px;height:24px;flex-shrink:0}
+.pir-toggle input{opacity:0;width:0;height:0}
+.pir-slider{position:absolute;inset:0;background:var(--border2);border-radius:24px;cursor:pointer;transition:.2s}
+.pir-slider::before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+input:checked+.pir-slider{background:var(--purple)}
+input:checked+.pir-slider::before{transform:translateX(20px)}
 /* RESULTS */
 .rtit{font-size:24px;font-weight:800;text-align:center;margin-bottom:4px}
 .rsub{font-size:12px;color:var(--muted);text-align:center;margin-bottom:18px}
@@ -218,6 +230,16 @@ input[type="text"]:focus{border-color:var(--purple)}
         <div class="sel-grid" id="roundsGrid"></div>
         <div class="lbl" style="margin-top:12px;">Tiempo por ronda</div>
         <div class="sel-grid" id="timerGrid"></div>
+        <div class="pir-toggle-wrap" id="pirWrap">
+          <div>
+            <div class="pir-toggle-label">🎯 Modo "Sin pasarse"</div>
+            <div class="pir-toggle-sub">Si tu precio es mayor que el real, quedas eliminado esa ronda</div>
+          </div>
+          <label class="pir-toggle">
+            <input type="checkbox" id="pirCheck" onchange="togglePir()">
+            <span class="pir-slider"></span>
+          </label>
+        </div>
       </div>
       <button class="btn btn-p hidden" id="startBtn" onclick="startGame()">Empezar partida</button>
       <div id="gWait" class="hidden" style="text-align:center;padding:14px 0;color:var(--muted);font-size:13px;">
@@ -242,6 +264,7 @@ input[type="text"]:focus{border-color:var(--purple)}
         <div class="product-name" id="gName">Cargando...</div>
         <div class="product-desc" id="gDesc"></div>
       </div>
+      <div id="pirWarnBanner" class="pir-warn hidden">🎯 ¡Ojo! Si te pasas del precio real, quedas eliminado esta ronda</div>
       <div id="gInputState">
         <div class="price-input-wrap">
           <span class="price-euro">€</span>
@@ -280,6 +303,7 @@ input[type="text"]:focus{border-color:var(--purple)}
         <div class="real-price-label">PRECIO REAL</div>
         <div class="real-price-val" id="rvPriceVal">€0</div>
       </div>
+      <div id="rvAllBust" class="pir-warn hidden">💥 ¡Todos se pasaron! Nadie gana el punto esta ronda</div>
       <div class="guess-list" id="rvGuessList"></div>
       <div class="rbox">
         <div class="rhint" id="rvHint">¿Listos para la siguiente ronda?</div>
@@ -373,7 +397,7 @@ const COLORS = ['#8b7cf8','#4ade80','#fb923c','#f87171','#38bdf8','#e879f9','#fb
 let app=null, db=null, roomRef=null, roomCode=null, myId=null, gs=null, isHost=false;
 let timerIv=null, lastTimerKey=null, lastRoundKey=null;
 let applyingRemote=false;
-let selRounds=10, selTimer=60;
+let selRounds=10, selTimer=60, selPIR=false;
 
 /* ═══════════════════════════════════════════════
    HELPERS
@@ -455,7 +479,7 @@ window.createRoom = async () => {
   await set(ref(db,'rooms_gtp/'+roomCode),{
     host:myId, phase:'lobby', players,
     playerOrder:[myId], scores:{}, round:0,
-    lobbyConfig:{totalRounds:selRounds,timerSeconds:selTimer},
+    lobbyConfig:{totalRounds:selRounds,timerSeconds:selTimer,priceIsRight:selPIR},
   });
   listenRoom();
 };
@@ -497,6 +521,10 @@ function listenRoom() {
 function buildGrids() {
   bGrid('roundsGrid',[5,10,15,20],selRounds,v=>{if(!isHost)return;selRounds=v;buildGrids();saveSettings();});
   bGrid('timerGrid',[30,60,90,0],selTimer,v=>{if(!isHost)return;selTimer=v;buildGrids();saveSettings();},v=>v===0?'∞':v+'s');
+  const chk=document.getElementById('pirCheck');
+  if(chk) chk.checked=selPIR;
+  const wrap=document.getElementById('pirWrap');
+  if(wrap) wrap.style.pointerEvents=isHost?'':'none';
 }
 function bGrid(id,vals,sel,onClick,lbl){
   const g=document.getElementById(id); g.innerHTML='';
@@ -508,15 +536,21 @@ function bGrid(id,vals,sel,onClick,lbl){
     g.appendChild(d);
   });
 }
+window.togglePir = () => {
+  if(!isHost) return;
+  selPIR=document.getElementById('pirCheck').checked;
+  saveSettings();
+};
 function saveSettings(){
   if(!isHost||!roomRef||applyingRemote) return;
-  update(roomRef,{lobbyConfig:{totalRounds:selRounds,timerSeconds:selTimer}});
+  update(roomRef,{lobbyConfig:{totalRounds:selRounds,timerSeconds:selTimer,priceIsRight:selPIR}});
 }
 function applyRemoteSettings(cfg){
   if(!cfg||isHost) return;
   applyingRemote=true;
   if(cfg.totalRounds!==undefined) selRounds=cfg.totalRounds;
   if(cfg.timerSeconds!==undefined) selTimer=cfg.timerSeconds;
+  if(cfg.priceIsRight!==undefined) selPIR=cfg.priceIsRight;
   buildGrids();
   applyingRemote=false;
 }
@@ -556,7 +590,7 @@ window.startGame = async () => {
   lastTimerKey=null;
   await update(roomRef,{
     phase:'guessing', round:1,
-    totalRounds:selRounds, timerSeconds:selTimer,
+    totalRounds:selRounds, timerSeconds:selTimer, priceIsRight:selPIR,
     productIdx, productDeck:deck,
     guesses:null, roundWinners:null, readyVotes:null,
     scores, tStart:Date.now(),
@@ -654,6 +688,9 @@ function renderGuessing(s){
     chips.appendChild(c);
   });
 
+  // Banner modo PIR
+  document.getElementById('pirWarnBanner').classList.toggle('hidden',!s.priceIsRight);
+
   startTimer(s);
 
   if(isHost){
@@ -684,13 +721,22 @@ async function advanceToReveal(){
   const guesses=s.guesses||{};
   const order=s.playerOrder||[], ps=s.players||{};
   const scores={...(s.scores||{})};
+  const pir=!!s.priceIsRight;
+
+  // En modo PIR: excluir a quien se pasó (guess > actual)
+  const validIds=order.filter(id=>{
+    if(!ps[id]||guesses[id]===undefined) return false;
+    if(pir && guesses[id]>actual) return false; // ¡se pasó!
+    return true;
+  });
+
   let minDiff=Infinity, winners=[];
-  for(const id of order){
-    if(!ps[id]||guesses[id]===undefined) continue;
+  for(const id of validIds){
     const diff=Math.abs(guesses[id]-actual);
     if(diff<minDiff){minDiff=diff;winners=[id];}
     else if(Math.abs(diff-minDiff)<0.001){winners.push(id);}
   }
+  // Si todos se pasaron: nadie gana (winners queda [])
   winners.forEach(id=>{scores[id]=(scores[id]||0)+1;});
   await update(roomRef,{phase:'reveal',scores,roundWinners:winners,readyVotes:null});
 }
@@ -712,20 +758,27 @@ function renderReveal(s){
 
   const guesses=s.guesses||{}, order=s.playerOrder||[], ps=s.players||{};
   const winners=s.roundWinners||[];
+  const pir=!!s.priceIsRight;
   const entries=order.filter(id=>ps[id]).map(id=>({
     id,name:ps[id].name,color:ps[id].color||col(0),
     guess:guesses[id],
+    busted:pir&&guesses[id]!==undefined&&guesses[id]>prod.p,
     diff:guesses[id]!==undefined?Math.abs(guesses[id]-prod.p):Infinity,
-  })).sort((a,b)=>a.diff-b.diff);
+  })).sort((a,b)=>{
+    // Los pasados van al fondo
+    if(a.busted&&!b.busted) return 1;
+    if(!a.busted&&b.busted) return -1;
+    return a.diff-b.diff;
+  });
 
   const list=document.getElementById('rvGuessList'); list.innerHTML='';
   entries.forEach((e,i)=>{
     const isWin=winners.includes(e.id);
     const row=document.createElement('div');
-    row.className='guess-row'+(isWin?' win':'')+(e.guess===undefined?' nosub':'');
-    const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
-    const diffStr=e.guess!==undefined?fmtDiff(e.guess,prod.p):'—';
-    const dc=e.diff===0?'exact':e.diff<prod.p*0.1?'close':'';
+    row.className='guess-row'+(isWin?' win':e.busted?' bust':e.guess===undefined?' nosub':'');
+    const medal=e.busted?'❌':i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
+    const diffStr=e.busted?'PASADO':e.guess!==undefined?fmtDiff(e.guess,prod.p):'—';
+    const dc=e.busted?'bust':e.diff===0?'exact':e.diff<prod.p*0.1?'close':'';
     row.innerHTML=`<div class="grank">${medal}</div>
       <div class="av" style="background:${e.color};color:#0a0710;">${ini(e.name)}</div>
       <div class="gname">${e.name}${e.id===myId?' (tú)':''}</div>
@@ -733,6 +786,11 @@ function renderReveal(s){
       <div class="gdiff ${dc}">${diffStr}</div>`;
     list.appendChild(row);
   });
+
+  // Mensaje especial si todos se pasaron (modo PIR)
+  const allBust=pir&&winners.length===0&&entries.some(e=>e.guess!==undefined);
+  document.getElementById('rvAllBust').classList.toggle('hidden',!allBust);
+  document.getElementById('rvPriceVal').style.color=allBust?'var(--red)':'';
 
   const isLast=(s.round||1)>=(s.totalRounds||10);
   document.getElementById('rvHint').textContent=isLast?'¿Listos para ver los resultados finales?':'¿Listos para la siguiente ronda?';
