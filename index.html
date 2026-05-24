@@ -311,57 +311,58 @@ import { getDatabase, ref, set, get, onValue, update } from 'https://www.gstatic
 /* ═══════════════════════════════════════════════
    PRODUCTOS
 ═══════════════════════════════════════════════ */
+// Precios verificados en idealo.es, tiendas oficiales y comparadores españoles (mayo 2026)
 const P = [
-  {e:"📱",n:"iPhone 16 Pro 128GB",d:"Último modelo de Apple, titanio negro, pantalla OLED 6.3\"",p:1219},
-  {e:"🎮",n:"PlayStation 5 Slim",d:"Consola Sony con lector de discos, nueva a estrenar",p:449},
-  {e:"💻",n:"MacBook Air M3 13\"",d:"Portátil Apple con chip M3, 8GB RAM, 256GB SSD",p:1299},
-  {e:"🎧",n:"AirPods Pro 2ª generación",d:"Auriculares Apple con cancelación activa de ruido",p:279},
-  {e:"📺",n:"Samsung TV 65\" QLED 4K",d:"Samsung Q70D, HDR10+, Smart TV 2024",p:899},
-  {e:"⌚",n:"Apple Watch Series 10 45mm",d:"Reloj inteligente Apple, caja de aluminio",p:449},
-  {e:"🎮",n:"Nintendo Switch OLED",d:"Consola portátil con pantalla OLED de 7 pulgadas",p:329},
-  {e:"🌪️",n:"Dyson V15 Detect",d:"Aspirador sin cable de alta gama con sensor láser",p:749},
-  {e:"📷",n:"GoPro Hero 13 Black",d:"Cámara de acción 5.3K, impermeable hasta 10m",p:399},
-  {e:"⌚",n:"Rolex Submariner acero",d:"El reloj de buceo más famoso del mundo, nuevo en tienda",p:9550},
-  {e:"👜",n:"Bolso Louis Vuitton Neverfull MM",d:"Monogram canvas, tamaño mediano, nuevo",p:1720},
-  {e:"👟",n:"Nike Air Force 1 blancas",d:"Las zapatillas más vendidas de la historia, talla 42",p:110},
-  {e:"💄",n:"Perfume Chanel Nº5 (100ml EDP)",d:"El perfume más icónico del mundo",p:185},
-  {e:"🚗",n:"Tesla Model 3 RWD nuevo",d:"Eléctrico de gama media de Tesla España",p:40990},
-  {e:"🚗",n:"BMW Serie 3 (base) nuevo",d:"BMW 318i gasolina, precio de venta recomendado",p:44900},
-  {e:"🛴",n:"Patinete Xiaomi Scooter 4",d:"Eléctrico homologado 25km/h, autonomía 35km",p:499},
-  {e:"🚌",n:"Abono transporte Madrid (mes)",d:"Zona A, tarifa mayores de 26 años",p:54.60},
-  {e:"🥩",n:"Jamón Ibérico de Bellota 5J",d:"Cincojotas, pata entera aprox. 7kg con soporte",p:499},
-  {e:"🍄",n:"Trufa negra fresca (100g)",d:"Tuber melanosporum de Teruel, temporada alta",p:45},
-  {e:"🍷",n:"Vega Sicilia Único 2016 (75cl)",d:"El vino más famoso de España, Ribera del Duero",p:280},
-  {e:"🥂",n:"Dom Pérignon 2013 (75cl)",d:"Champán de lujo francés, vintage",p:185},
-  {e:"🐟",n:"Caviar Beluga (30g)",d:"Caviar de esturión beluga importado",p:220},
-  {e:"🫒",n:"Aceite de oliva virgen extra (1L)",d:"Carbonell, calidad extra, del supermercado",p:6.99},
-  {e:"🍺",n:"Pack 12 cervezas Mahou 33cl",d:"Latas, del supermercado",p:5.45},
-  {e:"☕",n:"Café con leche en Starbucks",d:"Latte Grande (mediano) en España",p:5.50},
-  {e:"🍞",n:"Barra de pan del día",d:"Barra blanca normal de panadería de barrio, Madrid",p:0.90},
-  {e:"🥚",n:"Docena de huevos camperos L",d:"Del Mercadona, criados en suelo",p:2.95},
-  {e:"🫙",n:"Nutella bote 3kg",d:"Bote gigante de crema de cacao con avellanas",p:19.99},
-  {e:"🍫",n:"Tableta Lindt 85% cacao (100g)",d:"Chocolate negro de calidad, del supermercado",p:2.99},
-  {e:"⚽",n:"Entrada Real Madrid Liga",d:"Tribuna lateral baja, partido normal de Liga, Bernabéu",p:85},
-  {e:"🎵",n:"Abono Primavera Sound Barcelona",d:"Festival 3 días, precio anticipado",p:265},
-  {e:"🎬",n:"Entrada de cine (prime time)",d:"Yelmo Cines, sala normal sin 3D en Madrid",p:11.90},
-  {e:"🏨",n:"Noche en el Ritz de Madrid",d:"Mandarin Oriental Ritz, habitación doble estándar",p:850},
-  {e:"✈️",n:"Vuelo Madrid-Nueva York (ida)",d:"Clase turista, Iberia, 2 semanas de antelación",p:650},
-  {e:"🎮",n:"FIFA 25 para PS5",d:"Videojuego en caja, precio de lanzamiento oficial",p:79.99},
-  {e:"🎵",n:"Spotify Premium (1 año)",d:"Suscripción anual individual, tarifa actual",p:119.88},
-  {e:"📺",n:"Netflix Premium (1 mes)",d:"Plan 4K con descargas, tarifa vigente en España",p:22.99},
-  {e:"🛋️",n:"Sofá IKEA KIVIK 3 plazas",d:"El sofá más vendido de IKEA, tela gris",p:799},
-  {e:"🏠",n:"Alquiler piso 60m² Madrid (mes)",d:"1 habitación en Carabanchel, precio mensual",p:1200},
-  {e:"💇",n:"Corte de pelo en barbería",d:"Barbería normal de barrio en Madrid, sin cita",p:18},
-  {e:"🏋️",n:"Gym Holmes Place (año completo)",d:"Cuota mensual × 12, cadena premium en Madrid",p:720},
-  {e:"🚲",n:"Bici Trek Marlin 7 MTB",d:"Mountain bike aluminio 29\", frenos hidráulicos",p:999},
-  {e:"⚽",n:"Balón oficial Champions League",d:"Adidas UCL Pro 2024, balón de partido oficial",p:189},
-  {e:"🍽️",n:"Menú del día en Madrid",d:"Primero, segundo, postre y bebida incluida",p:14},
-  {e:"🖼️",n:"Entrada Museo del Prado",d:"Adulto, tarifa general sin audioguía",p:15},
-  {e:"🎭",n:"Entrada El Rey León (musical)",d:"Teatro Lope de Vega Madrid, butaca de platea",p:95},
-  {e:"🧴",n:"Estée Lauder Advanced Night Repair 50ml",d:"El sérum antiaging más vendido del mundo",p:109},
-  {e:"🎒",n:"Matrícula universitaria (año)",d:"Tasas de Grado, Comunidad de Madrid",p:1500},
-  {e:"📚",n:"Manga One Piece volumen 1",d:"Primera edición española de Planeta Comics",p:7.95},
-  {e:"🍕",n:"Pizza a domicilio grande",d:"Domino's, pizza grande especial con entrega a domicilio",p:19.99},
+  {e:"📱",n:"iPhone 16 Pro 128GB",d:"Último modelo de Apple, titanio negro, pantalla OLED 6.3\"",p:1130},         // idealo.es may-26
+  {e:"🎮",n:"PlayStation 5 Slim (con lector)",d:"Consola Sony con lector de discos, nueva a estrenar",p:449},     // idealo.es may-26
+  {e:"💻",n:"MacBook Air M3 13\"",d:"Portátil Apple con chip M3, 8GB RAM, 256GB SSD",p:1269},                     // idealo.es may-26
+  {e:"🎧",n:"AirPods Pro 2ª gen USB-C",d:"Auriculares Apple con cancelación activa de ruido, estuche MagSafe",p:199}, // idealo.es may-26
+  {e:"📺",n:"Samsung TV 65\" QLED 4K",d:"Samsung Q70D, HDR10+, Smart TV 2024",p:699},                             // comparadores may-26
+  {e:"⌚",n:"Apple Watch Series 10 42mm GPS",d:"Reloj inteligente Apple, aluminio negro azabache",p:399},          // idealo.es may-26
+  {e:"🎮",n:"Nintendo Switch OLED",d:"Consola portátil con pantalla OLED de 7 pulgadas",p:299},                   // idealo.es may-26 (desde 278€)
+  {e:"🌪️",n:"Dyson V15 Detect",d:"Aspirador sin cable de alta gama con sensor láser",p:599},                     // dyson.es / idealo may-26
+  {e:"📷",n:"GoPro Hero 13 Black",d:"Cámara de acción 5.3K, impermeable hasta 10m",p:298},                        // idealo.es may-26
+  {e:"⌚",n:"Rolex Submariner acero",d:"El reloj de buceo más famoso del mundo, nuevo en tienda autorizada",p:9500}, // distribuidor oficial España
+  {e:"👜",n:"Bolso Louis Vuitton Neverfull MM",d:"Monogram canvas, tamaño mediano, nuevo en boutique",p:1950},     // LV Europe 2025
+  {e:"👟",n:"Nike Air Force 1 blancas",d:"Las zapatillas más vendidas de la historia, talla 42",p:110},            // amazon.es / tiendas
+  {e:"💄",n:"Perfume Chanel Nº5 100ml EDP",d:"El perfume más icónico del mundo",p:155},                           // Sephora / Druni España
+  {e:"🚗",n:"Tesla Model 3 RWD nuevo",d:"Eléctrico de gama media, precio con promoción Tesla España 2025",p:35990}, // tesla.com/es
+  {e:"🚗",n:"BMW Serie 3 nuevo (base)",d:"BMW 320i gasolina, precio de venta recomendado en España",p:49514},      // BMW España 2025
+  {e:"🛴",n:"Patinete Xiaomi Scooter 4",d:"Eléctrico homologado 25km/h, autonomía 35km",p:294},                   // idealo.es may-26
+  {e:"🚌",n:"Abono transporte Madrid (mes)",d:"Zona A, tarifa bonificada vigente 2025 (mayores 26 años)",p:32.70}, // CRTM jul-2025
+  {e:"🥩",n:"Jamón Ibérico de Bellota 5J",d:"Cincojotas, pata entera aprox. 7kg con soporte",p:650},              // tiendas especializadas 2025
+  {e:"🍄",n:"Trufa negra fresca (100g)",d:"Tuber melanosporum de Teruel, temporada alta",p:45},                    // mercado especializado
+  {e:"🍷",n:"Vega Sicilia Único 2016 (75cl)",d:"El vino más famoso de España, Ribera del Duero",p:400},            // bodeboca.com 2025
+  {e:"🥂",n:"Dom Pérignon Vintage (75cl)",d:"Champán de lujo francés, vintage",p:210},                            // idealo.es may-26 (desde 206€)
+  {e:"🐟",n:"Caviar Beluga (30g)",d:"Caviar de esturión beluga importado",p:220},                                  // tiendas gourmet
+  {e:"🫒",n:"Aceite de oliva virgen extra (1L)",d:"Carbonell, calidad extra, del supermercado",p:6.99},            // supermercados España 2025
+  {e:"🍺",n:"Pack 12 cervezas Mahou 33cl",d:"Latas, del supermercado",p:5.45},                                    // supermercados España
+  {e:"☕",n:"Café con leche en Starbucks",d:"Latte Grande (mediano) en España",p:5.50},                            // Starbucks España
+  {e:"🍞",n:"Barra de pan del día",d:"Barra blanca normal de panadería de barrio, Madrid",p:0.90},                 // panadería barrio Madrid
+  {e:"🥚",n:"Docena de huevos camperos L",d:"Del Mercadona, criados en suelo",p:3.49},                            // Mercadona 2025
+  {e:"🫙",n:"Nutella bote 3kg",d:"Bote gigante de crema de cacao con avellanas",p:22.99},                         // supermercados 2025
+  {e:"🍫",n:"Tableta Lindt 85% cacao (100g)",d:"Chocolate negro de calidad, del supermercado",p:2.99},            // supermercados España
+  {e:"⚽",n:"Entrada Real Madrid Liga",d:"Tribuna lateral baja, partido normal de Liga, Bernabéu",p:85},           // realmadrid.com
+  {e:"🎵",n:"Abono Primavera Sound Barcelona",d:"Festival 3 días, venta general 2025",p:350},                     // primaverasound.com 2025
+  {e:"🎬",n:"Entrada de cine (prime time)",d:"Yelmo Cines, sala normal sin 3D en Madrid",p:10.90},                // yelmocines.es 2025
+  {e:"🏨",n:"Noche en el Ritz de Madrid",d:"Mandarin Oriental Ritz, habitación doble estándar",p:800},            // booking.com / trabber 2025
+  {e:"✈️",n:"Vuelo Madrid-Nueva York (ida)",d:"Clase turista, Iberia, antelación media",p:550},                   // idealo / kayak may-26
+  {e:"🎮",n:"EA Sports FC 25 para PS5",d:"Videojuego en caja, precio actual en tiendas (lanzamiento sep-2024)",p:35}, // idealo.es may-26
+  {e:"🎵",n:"Spotify Premium (1 mes)",d:"Suscripción mensual individual, tarifa vigente España sep-2025",p:11.99}, // spotify.com/es
+  {e:"📺",n:"Netflix Premium (1 mes)",d:"Plan 4K con descargas, tarifa vigente España oct-2025",p:19.99},          // netflix.com/es
+  {e:"🛋️",n:"Sofá IKEA KIVIK 3 plazas",d:"Sofá clásico IKEA, tela gris, medidas 228cm",p:549},                   // ikea.com/es 2025
+  {e:"🏠",n:"Alquiler piso 60m² Madrid (mes)",d:"1 habitación en Carabanchel, precio mensual 2025",p:1200},        // portales inmobiliarios 2025
+  {e:"💇",n:"Corte de pelo en barbería",d:"Barbería normal de barrio en Madrid, sin cita",p:18},                   // precio barrio Madrid
+  {e:"🏋️",n:"Gym Holmes Place (mes)",d:"Cuota mensual, cadena premium en Madrid",p:65},                           // Holmes Place España 2025
+  {e:"🚲",n:"Bici Trek Marlin 7 Gen 3 MTB",d:"Mountain bike aluminio 29\", frenos hidráulicos Shimano",p:999},    // trekbikes.com/es 2025
+  {e:"⚽",n:"Balón oficial Champions League",d:"Adidas UCL Pro 2024-25, balón de partido oficial",p:185},          // adidas.es
+  {e:"🍽️",n:"Menú del día en Madrid",d:"Primero, segundo, postre y bebida incluida",p:15},                       // restaurantes Madrid 2025
+  {e:"🖼️",n:"Entrada Museo del Prado",d:"Adulto, tarifa general sin audioguía",p:15},                             // museodelprado.es
+  {e:"🎭",n:"Entrada El Rey León (musical)",d:"Teatro Lope de Vega Madrid, butaca de platea",p:95},                // taquilla oficial
+  {e:"🧴",n:"Estée Lauder Advanced Night Repair 50ml",d:"El sérum antiaging más vendido del mundo",p:69},          // idealo.es (desde 55€)
+  {e:"🎒",n:"Matrícula universitaria (año)",d:"Tasas de Grado, Comunidad de Madrid",p:1500},                      // CAM tasas oficiales
+  {e:"📚",n:"Manga One Piece volumen 1",d:"Edición española de Planeta Comics",p:7.95},                            // librerías España
+  {e:"🍕",n:"Pizza a domicilio grande",d:"Domino's, pizza grande especial con entrega a domicilio",p:20.99},       // dominos.es
 ];
 
 /* ═══════════════════════════════════════════════
