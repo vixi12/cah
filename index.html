@@ -69,7 +69,9 @@ input[type="text"]:focus{border-color:var(--purple)}
 .timer-bar.danger{background:var(--red)}
 /* PRODUCT */
 .product-card{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:20px 18px;width:100%;margin-bottom:14px;text-align:center}
-.product-emoji{font-size:46px;margin-bottom:10px;line-height:1}
+.product-img-wrap{width:100%;border-radius:12px;overflow:hidden;margin-bottom:10px;position:relative;height:150px;background:var(--surface2);display:flex;align-items:center;justify-content:center}
+.product-img{width:100%;height:100%;object-fit:cover;display:none}
+.product-emoji-fb{font-size:46px;line-height:1;position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
 .product-name{font-size:19px;font-weight:800;margin-bottom:6px;line-height:1.2}
 .product-desc{font-size:12px;color:var(--muted);line-height:1.4}
 /* PRICE INPUT */
@@ -158,7 +160,7 @@ input:checked+.pir-slider::before{transform:translateX(20px)}
 </head>
 <body>
 <div id="app">
-  <div class="vtag">v1.3.0</div>
+  <div class="vtag">v1.4.0</div>
   <div class="rtag hidden" id="rtag">RONDA 1</div>
   <div class="glow g1"></div>
   <div class="glow g2"></div>
@@ -214,7 +216,7 @@ input:checked+.pir-slider::before{transform:translateX(20px)}
     </div>
     <button class="btn btn-ghost" onclick="showCfg()" style="margin-top:14px;">⚙ Firebase</button>
     <span class="help-link" onclick="showRules()">¿Cómo se juega?</span>
-    <div class="home-ver">v1.3.0</div>
+    <div class="home-ver">v1.4.0</div>
   </div>
 
   <!-- LOBBY -->
@@ -262,7 +264,10 @@ input:checked+.pir-slider::before{transform:translateX(20px)}
         <div class="timer-bar" id="timerBar" style="width:100%"></div>
       </div>
       <div class="product-card">
-        <div class="product-emoji" id="gEmoji">💰</div>
+        <div class="product-img-wrap">
+          <img id="gImg" class="product-img" alt="">
+          <span id="gEmoji" class="product-emoji-fb">💰</span>
+        </div>
         <div class="product-name" id="gName">Cargando...</div>
         <div class="product-desc" id="gDesc"></div>
       </div>
@@ -295,7 +300,10 @@ input:checked+.pir-slider::before{transform:translateX(20px)}
       </div>
       <div class="product-card" style="margin-bottom:12px;padding:14px 18px;">
         <div style="display:flex;align-items:center;gap:12px;">
-          <span id="rvEmoji" style="font-size:32px;"></span>
+          <div style="width:60px;height:60px;border-radius:10px;overflow:hidden;flex-shrink:0;position:relative;background:var(--surface2);display:flex;align-items:center;justify-content:center;">
+            <img id="rvImg" style="width:100%;height:100%;object-fit:cover;display:none;" alt="">
+            <span id="rvEmoji" style="font-size:28px;position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"></span>
+          </div>
           <div style="text-align:left;">
             <div class="product-name" style="font-size:15px;" id="rvName"></div>
           </div>
@@ -339,56 +347,56 @@ import { getDatabase, ref, set, get, onValue, update } from 'https://www.gstatic
 ═══════════════════════════════════════════════ */
 // Precios verificados en idealo.es, tiendas oficiales y comparadores españoles (mayo 2026)
 const P = [
-  {e:"📱",n:"iPhone 16 Pro 128GB",d:"Último modelo de Apple, titanio negro, pantalla OLED 6.3\"",p:1130},         // idealo.es may-26
-  {e:"🎮",n:"PlayStation 5 Slim (con lector)",d:"Consola Sony con lector de discos, nueva a estrenar",p:449},     // idealo.es may-26
-  {e:"💻",n:"MacBook Air M3 13\"",d:"Portátil Apple con chip M3, 8GB RAM, 256GB SSD",p:1269},                     // idealo.es may-26
-  {e:"🎧",n:"AirPods Pro 2ª gen USB-C",d:"Auriculares Apple con cancelación activa de ruido, estuche MagSafe",p:199}, // idealo.es may-26
-  {e:"📺",n:"Samsung TV 65\" QLED 4K",d:"Samsung Q70D, HDR10+, Smart TV 2024",p:699},                             // comparadores may-26
-  {e:"⌚",n:"Apple Watch Series 10 42mm GPS",d:"Reloj inteligente Apple, aluminio negro azabache",p:399},          // idealo.es may-26
-  {e:"🎮",n:"Nintendo Switch OLED",d:"Consola portátil con pantalla OLED de 7 pulgadas",p:299},                   // idealo.es may-26 (desde 278€)
-  {e:"🌪️",n:"Dyson V15 Detect",d:"Aspirador sin cable de alta gama con sensor láser",p:599},                     // dyson.es / idealo may-26
-  {e:"📷",n:"GoPro Hero 13 Black",d:"Cámara de acción 5.3K, impermeable hasta 10m",p:298},                        // idealo.es may-26
-  {e:"⌚",n:"Rolex Submariner acero",d:"El reloj de buceo más famoso del mundo, nuevo en tienda autorizada",p:9500}, // distribuidor oficial España
-  {e:"👜",n:"Bolso Louis Vuitton Neverfull MM",d:"Monogram canvas, tamaño mediano, nuevo en boutique",p:1950},     // LV Europe 2025
-  {e:"👟",n:"Nike Air Force 1 blancas",d:"Las zapatillas más vendidas de la historia, talla 42",p:110},            // amazon.es / tiendas
-  {e:"💄",n:"Perfume Chanel Nº5 100ml EDP",d:"El perfume más icónico del mundo",p:155},                           // Sephora / Druni España
-  {e:"🚗",n:"Tesla Model 3 RWD nuevo",d:"Eléctrico de gama media, precio con promoción Tesla España 2025",p:35990}, // tesla.com/es
-  {e:"🚗",n:"BMW Serie 3 nuevo (base)",d:"BMW 320i gasolina, precio de venta recomendado en España",p:49514},      // BMW España 2025
-  {e:"🛴",n:"Patinete Xiaomi Scooter 4",d:"Eléctrico homologado 25km/h, autonomía 35km",p:294},                   // idealo.es may-26
-  {e:"🚌",n:"Abono transporte Madrid (mes)",d:"Zona A, tarifa bonificada vigente 2025 (mayores 26 años)",p:32.70}, // CRTM jul-2025
-  {e:"🥩",n:"Jamón Ibérico de Bellota 5J",d:"Cincojotas, pata entera aprox. 7kg con soporte",p:650},              // tiendas especializadas 2025
-  {e:"🍄",n:"Trufa negra fresca (100g)",d:"Tuber melanosporum de Teruel, temporada alta",p:45},                    // mercado especializado
-  {e:"🍷",n:"Vega Sicilia Único 2016 (75cl)",d:"El vino más famoso de España, Ribera del Duero",p:400},            // bodeboca.com 2025
-  {e:"🥂",n:"Dom Pérignon Vintage (75cl)",d:"Champán de lujo francés, vintage",p:210},                            // idealo.es may-26 (desde 206€)
-  {e:"🐟",n:"Caviar Beluga (30g)",d:"Caviar de esturión beluga importado",p:220},                                  // tiendas gourmet
-  {e:"🫒",n:"Aceite de oliva virgen extra (1L)",d:"Carbonell, calidad extra, del supermercado",p:6.99},            // supermercados España 2025
-  {e:"🍺",n:"Pack 12 cervezas Mahou 33cl",d:"Latas, del supermercado",p:5.45},                                    // supermercados España
-  {e:"☕",n:"Café con leche en Starbucks",d:"Latte Grande (mediano) en España",p:5.50},                            // Starbucks España
-  {e:"🍞",n:"Barra de pan del día",d:"Barra blanca normal de panadería de barrio, Madrid",p:0.90},                 // panadería barrio Madrid
-  {e:"🥚",n:"Docena de huevos camperos L",d:"Del Mercadona, criados en suelo",p:3.49},                            // Mercadona 2025
-  {e:"🫙",n:"Nutella bote 3kg",d:"Bote gigante de crema de cacao con avellanas",p:22.99},                         // supermercados 2025
-  {e:"🍫",n:"Tableta Lindt 85% cacao (100g)",d:"Chocolate negro de calidad, del supermercado",p:2.99},            // supermercados España
-  {e:"⚽",n:"Entrada Real Madrid Liga",d:"Tribuna lateral baja, partido normal de Liga, Bernabéu",p:85},           // realmadrid.com
-  {e:"🎵",n:"Abono Primavera Sound Barcelona",d:"Festival 3 días, venta general 2025",p:350},                     // primaverasound.com 2025
-  {e:"🎬",n:"Entrada de cine (prime time)",d:"Yelmo Cines, sala normal sin 3D en Madrid",p:10.90},                // yelmocines.es 2025
-  {e:"🏨",n:"Noche en el Ritz de Madrid",d:"Mandarin Oriental Ritz, habitación doble estándar",p:800},            // booking.com / trabber 2025
-  {e:"✈️",n:"Vuelo Madrid-Nueva York (ida)",d:"Clase turista, Iberia, antelación media",p:550},                   // idealo / kayak may-26
-  {e:"🎮",n:"EA Sports FC 25 para PS5",d:"Videojuego en caja, precio actual en tiendas (lanzamiento sep-2024)",p:35}, // idealo.es may-26
-  {e:"🎵",n:"Spotify Premium (1 mes)",d:"Suscripción mensual individual, tarifa vigente España sep-2025",p:11.99}, // spotify.com/es
-  {e:"📺",n:"Netflix Premium (1 mes)",d:"Plan 4K con descargas, tarifa vigente España oct-2025",p:19.99},          // netflix.com/es
-  {e:"🛋️",n:"Sofá IKEA KIVIK 3 plazas",d:"Sofá clásico IKEA, tela gris, medidas 228cm",p:549},                   // ikea.com/es 2025
-  {e:"🏠",n:"Alquiler piso 60m² Madrid (mes)",d:"1 habitación en Carabanchel, precio mensual 2025",p:1200},        // portales inmobiliarios 2025
-  {e:"💇",n:"Corte de pelo en barbería",d:"Barbería normal de barrio en Madrid, sin cita",p:18},                   // precio barrio Madrid
-  {e:"🏋️",n:"Gym Holmes Place (mes)",d:"Cuota mensual, cadena premium en Madrid",p:65},                           // Holmes Place España 2025
-  {e:"🚲",n:"Bici Trek Marlin 7 Gen 3 MTB",d:"Mountain bike aluminio 29\", frenos hidráulicos Shimano",p:999},    // trekbikes.com/es 2025
-  {e:"⚽",n:"Balón oficial Champions League",d:"Adidas UCL Pro 2024-25, balón de partido oficial",p:185},          // adidas.es
-  {e:"🍽️",n:"Menú del día en Madrid",d:"Primero, segundo, postre y bebida incluida",p:15},                       // restaurantes Madrid 2025
-  {e:"🖼️",n:"Entrada Museo del Prado",d:"Adulto, tarifa general sin audioguía",p:15},                             // museodelprado.es
-  {e:"🎭",n:"Entrada El Rey León (musical)",d:"Teatro Lope de Vega Madrid, butaca de platea",p:95},                // taquilla oficial
-  {e:"🧴",n:"Estée Lauder Advanced Night Repair 50ml",d:"El sérum antiaging más vendido del mundo",p:69},          // idealo.es (desde 55€)
-  {e:"🎒",n:"Matrícula universitaria (año)",d:"Tasas de Grado, Comunidad de Madrid",p:1500},                      // CAM tasas oficiales
-  {e:"📚",n:"Manga One Piece volumen 1",d:"Edición española de Planeta Comics",p:7.95},                            // librerías España
-  {e:"🍕",n:"Pizza a domicilio grande",d:"Domino's, pizza grande especial con entrega a domicilio",p:20.99},       // dominos.es
+  {e:"📱",n:"iPhone 16 Pro 128GB",d:"Último modelo de Apple, titanio negro, pantalla OLED 6.3\"",p:1130,img:"iphone smartphone apple"},
+  {e:"🎮",n:"PlayStation 5 Slim (con lector)",d:"Consola Sony con lector de discos, nueva a estrenar",p:449,img:"playstation 5 gaming console"},
+  {e:"💻",n:"MacBook Air M3 13\"",d:"Portátil Apple con chip M3, 8GB RAM, 256GB SSD",p:1269,img:"macbook laptop apple"},
+  {e:"🎧",n:"AirPods Pro 2ª gen USB-C",d:"Auriculares Apple con cancelación activa de ruido, estuche MagSafe",p:199,img:"wireless earbuds headphones"},
+  {e:"📺",n:"Samsung TV 65\" QLED 4K",d:"Samsung Q70D, HDR10+, Smart TV 2024",p:699,img:"4k television smart tv living room"},
+  {e:"⌚",n:"Apple Watch Series 10 42mm GPS",d:"Reloj inteligente Apple, aluminio negro azabache",p:399,img:"apple watch smartwatch wrist"},
+  {e:"🎮",n:"Nintendo Switch OLED",d:"Consola portátil con pantalla OLED de 7 pulgadas",p:299,img:"nintendo switch portable gaming"},
+  {e:"🌪️",n:"Dyson V15 Detect",d:"Aspirador sin cable de alta gama con sensor láser",p:599,img:"dyson vacuum cleaner cordless"},
+  {e:"📷",n:"GoPro Hero 13 Black",d:"Cámara de acción 5.3K, impermeable hasta 10m",p:298,img:"gopro action camera adventure"},
+  {e:"⌚",n:"Rolex Submariner acero",d:"El reloj de buceo más famoso del mundo, nuevo en tienda autorizada",p:9500,img:"rolex submariner luxury watch"},
+  {e:"👜",n:"Bolso Louis Vuitton Neverfull MM",d:"Monogram canvas, tamaño mediano, nuevo en boutique",p:1950,img:"louis vuitton handbag luxury fashion"},
+  {e:"👟",n:"Nike Air Force 1 blancas",d:"Las zapatillas más vendidas de la historia, talla 42",p:110,img:"nike air force 1 white sneakers"},
+  {e:"💄",n:"Perfume Chanel Nº5 100ml EDP",d:"El perfume más icónico del mundo",p:155,img:"chanel perfume bottle luxury fragrance"},
+  {e:"🚗",n:"Tesla Model 3 RWD nuevo",d:"Eléctrico de gama media, precio con promoción Tesla España 2025",p:35990,img:"tesla model 3 electric car"},
+  {e:"🚗",n:"BMW Serie 3 nuevo (base)",d:"BMW 320i gasolina, precio de venta recomendado en España",p:49514,img:"bmw 3 series sedan car"},
+  {e:"🛴",n:"Patinete Xiaomi Scooter 4",d:"Eléctrico homologado 25km/h, autonomía 35km",p:294,img:"electric scooter city commute"},
+  {e:"🚌",n:"Abono transporte Madrid (mes)",d:"Zona A, tarifa bonificada vigente 2025 (mayores 26 años)",p:32.70,img:"metro subway public transport"},
+  {e:"🥩",n:"Jamón Ibérico de Bellota 5J",d:"Cincojotas, pata entera aprox. 7kg con soporte",p:650,img:"iberian ham jamon spanish food"},
+  {e:"🍄",n:"Trufa negra fresca (100g)",d:"Tuber melanosporum de Teruel, temporada alta",p:45,img:"black truffle gourmet mushroom"},
+  {e:"🍷",n:"Vega Sicilia Único 2016 (75cl)",d:"El vino más famoso de España, Ribera del Duero",p:400,img:"red wine bottle vineyard"},
+  {e:"🥂",n:"Dom Pérignon Vintage (75cl)",d:"Champán de lujo francés, vintage",p:210,img:"champagne bottle celebration luxury"},
+  {e:"🐟",n:"Caviar Beluga (30g)",d:"Caviar de esturión beluga importado",p:220,img:"beluga caviar gourmet delicacy"},
+  {e:"🫒",n:"Aceite de oliva virgen extra (1L)",d:"Carbonell, calidad extra, del supermercado",p:6.99,img:"olive oil bottle kitchen"},
+  {e:"🍺",n:"Pack 12 cervezas Mahou 33cl",d:"Latas, del supermercado",p:5.45,img:"beer cans pack lager"},
+  {e:"☕",n:"Café con leche en Starbucks",d:"Latte Grande (mediano) en España",p:5.50,img:"starbucks coffee latte cup"},
+  {e:"🍞",n:"Barra de pan del día",d:"Barra blanca normal de panadería de barrio, Madrid",p:0.90,img:"bread baguette bakery fresh"},
+  {e:"🥚",n:"Docena de huevos camperos L",d:"Del Mercadona, criados en suelo",p:3.49,img:"eggs dozen carton farm"},
+  {e:"🫙",n:"Nutella bote 3kg",d:"Bote gigante de crema de cacao con avellanas",p:22.99,img:"nutella chocolate hazelnut spread jar"},
+  {e:"🍫",n:"Tableta Lindt 85% cacao (100g)",d:"Chocolate negro de calidad, del supermercado",p:2.99,img:"dark chocolate bar lindt"},
+  {e:"⚽",n:"Entrada Real Madrid Liga",d:"Tribuna lateral baja, partido normal de Liga, Bernabéu",p:85,img:"football stadium crowd soccer"},
+  {e:"🎵",n:"Abono Primavera Sound Barcelona",d:"Festival 3 días, venta general 2025",p:350,img:"music festival outdoor concert crowd"},
+  {e:"🎬",n:"Entrada de cine (prime time)",d:"Yelmo Cines, sala normal sin 3D en Madrid",p:10.90,img:"cinema movie theater screen"},
+  {e:"🏨",n:"Noche en el Ritz de Madrid",d:"Mandarin Oriental Ritz, habitación doble estándar",p:800,img:"luxury hotel room elegant"},
+  {e:"✈️",n:"Vuelo Madrid-Nueva York (ida)",d:"Clase turista, Iberia, antelación media",p:550,img:"airplane flight travel sky"},
+  {e:"🎮",n:"EA Sports FC 25 para PS5",d:"Videojuego en caja, precio actual en tiendas (lanzamiento sep-2024)",p:35,img:"soccer video game ps5 controller"},
+  {e:"🎵",n:"Spotify Premium (1 mes)",d:"Suscripción mensual individual, tarifa vigente España sep-2025",p:11.99,img:"spotify music streaming headphones"},
+  {e:"📺",n:"Netflix Premium (1 mes)",d:"Plan 4K con descargas, tarifa vigente España oct-2025",p:19.99,img:"netflix streaming popcorn television"},
+  {e:"🛋️",n:"Sofá IKEA KIVIK 3 plazas",d:"Sofá clásico IKEA, tela gris, medidas 228cm",p:549,img:"ikea sofa couch living room grey"},
+  {e:"🏠",n:"Alquiler piso 60m² Madrid (mes)",d:"1 habitación en Carabanchel, precio mensual 2025",p:1200,img:"apartment flat interior modern"},
+  {e:"💇",n:"Corte de pelo en barbería",d:"Barbería normal de barrio en Madrid, sin cita",p:18,img:"barbershop haircut barber"},
+  {e:"🏋️",n:"Gym Holmes Place (mes)",d:"Cuota mensual, cadena premium en Madrid",p:65,img:"gym fitness workout weights"},
+  {e:"🚲",n:"Bici Trek Marlin 7 Gen 3 MTB",d:"Mountain bike aluminio 29\", frenos hidráulicos Shimano",p:999,img:"mountain bike trek mtb trail"},
+  {e:"⚽",n:"Balón oficial Champions League",d:"Adidas UCL Pro 2024-25, balón de partido oficial",p:185,img:"champions league soccer ball adidas"},
+  {e:"🍽️",n:"Menú del día en Madrid",d:"Primero, segundo, postre y bebida incluida",p:15,img:"restaurant lunch menu food plate"},
+  {e:"🖼️",n:"Entrada Museo del Prado",d:"Adulto, tarifa general sin audioguía",p:15,img:"art museum painting gallery"},
+  {e:"🎭",n:"Entrada El Rey León (musical)",d:"Teatro Lope de Vega Madrid, butaca de platea",p:95,img:"theater musical stage performance"},
+  {e:"🧴",n:"Estée Lauder Advanced Night Repair 50ml",d:"El sérum antiaging más vendido del mundo",p:69,img:"serum skincare beauty cosmetics"},
+  {e:"🎒",n:"Matrícula universitaria (año)",d:"Tasas de Grado, Comunidad de Madrid",p:1500,img:"university campus students lecture"},
+  {e:"📚",n:"Manga One Piece volumen 1",d:"Edición española de Planeta Comics",p:7.95,img:"manga comic book one piece"},
+  {e:"🍕",n:"Pizza a domicilio grande",d:"Domino's, pizza grande especial con entrega a domicilio",p:20.99,img:"pizza delivery food"},
 ];
 
 /* ═══════════════════════════════════════════════
@@ -428,6 +436,18 @@ const fmtDiff = (guess,actual) => {
   if(Math.abs(d)<0.01) return '🎯 EXACTO';
   return (d>0?'+€':'-€')+abs;
 };
+function loadImg(imgId,emoId,query,emoji){
+  const img=document.getElementById(imgId);
+  const emo=document.getElementById(emoId);
+  if(!img||!emo) return;
+  emo.textContent=emoji;
+  img.style.display='none';
+  emo.style.display='';
+  const src='https://source.unsplash.com/400x220/?'+encodeURIComponent(query);
+  img.onload=()=>{img.style.display='';emo.style.display='none';};
+  img.onerror=()=>{img.style.display='none';emo.style.display='';};
+  if(img.src!==src) img.src=src;
+}
 
 /* ═══════════════════════════════════════════════
    FIREBASE
@@ -667,11 +687,12 @@ function renderGuessing(s){
   const guesses=s.guesses||{};
   const iSub=guesses[myId]!==undefined;
 
-  // Reset input on new round only
+  // Reset input and load image on new round only
   const rk=`r${s.round}_${s.productIdx}`;
   if(lastRoundKey!==rk){
     lastRoundKey=rk;
     document.getElementById('guessInput').value='';
+    loadImg('gImg','gEmoji',prod.img,prod.e);
   }
 
   document.getElementById('gInputState').classList.toggle('hidden',iSub);
@@ -754,7 +775,7 @@ function renderReveal(s){
   document.getElementById('rvPts').textContent=(s.scores?.[myId]||0)+' pts';
 
   const prod=P[s.productIdx];
-  document.getElementById('rvEmoji').textContent=prod.e;
+  loadImg('rvImg','rvEmoji',prod.img,prod.e);
   document.getElementById('rvName').textContent=prod.n;
   document.getElementById('rvPriceVal').textContent=fmtP(prod.p);
 
