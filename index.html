@@ -149,6 +149,7 @@ input:checked+.pir-slider::before{transform:translateX(20px)}
 .rtag.hidden{display:none}
 .help-link{display:block;text-align:center;margin-top:10px;color:var(--muted);font-size:12px;text-decoration:underline;cursor:pointer}
 .help-link:hover{color:var(--text)}
+.home-ver{text-align:center;margin-top:8px;font-size:11px;color:var(--hint);font-family:var(--mono);letter-spacing:.1em}
 .rules-list{font-size:13px;color:var(--text);line-height:1.7;padding-left:18px}
 .rules-list li{margin-bottom:6px}
 @keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
@@ -157,7 +158,7 @@ input:checked+.pir-slider::before{transform:translateX(20px)}
 </head>
 <body>
 <div id="app">
-  <div class="vtag">v1.0.0</div>
+  <div class="vtag">v1.3.0</div>
   <div class="rtag hidden" id="rtag">RONDA 1</div>
   <div class="glow g1"></div>
   <div class="glow g2"></div>
@@ -213,6 +214,7 @@ input:checked+.pir-slider::before{transform:translateX(20px)}
     </div>
     <button class="btn btn-ghost" onclick="showCfg()" style="margin-top:14px;">⚙ Firebase</button>
     <span class="help-link" onclick="showRules()">¿Cómo se juega?</span>
+    <div class="home-ver">v1.3.0</div>
   </div>
 
   <!-- LOBBY -->
